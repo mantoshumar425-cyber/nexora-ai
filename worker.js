@@ -1,4 +1,5 @@
 const DEFAULT_MODEL = "gemini-3.6-flash";
+
 const IMAGE_MODEL = "gemini-3.1-flash-image";
 
 const ALLOWED_MODELS = new Set([
@@ -23,6 +24,7 @@ const CORS = {
 // ======================================================
 
 export default {
+
   async fetch(request, env) {
 
     const url = new URL(request.url);
@@ -36,21 +38,27 @@ export default {
 
     try {
 
-      // ==================================================
+      // --------------------------------------------------
       // HEALTH
-      // ==================================================
+      // --------------------------------------------------
 
       if (
         url.pathname === "/api/health" &&
         request.method === "GET"
       ) {
+
         return json({
           success: true,
           service: "Nexora AI",
           worker: "online",
+
           model: DEFAULT_MODEL,
+
           imageModel: IMAGE_MODEL,
-          geminiKey: Boolean(env.GEMINI_API_KEY),
+
+          geminiKey:
+            Boolean(env.GEMINI_API_KEY),
+
           streaming: true,
           vision: true,
           files: true,
@@ -61,33 +69,41 @@ export default {
       }
 
 
-      // ==================================================
+      // --------------------------------------------------
       // CHAT
-      // ==================================================
+      // --------------------------------------------------
 
       if (
         url.pathname === "/api/chat" &&
         request.method === "POST"
       ) {
-        return await chat(request, env);
+
+        return await chat(
+          request,
+          env
+        );
       }
 
 
-      // ==================================================
+      // --------------------------------------------------
       // IMAGE GENERATION
-      // ==================================================
+      // --------------------------------------------------
 
       if (
         url.pathname === "/api/generate-image" &&
         request.method === "POST"
       ) {
-        return await generateImage(request, env);
+
+        return await generateImage(
+          request,
+          env
+        );
       }
 
 
-      // ==================================================
+      // --------------------------------------------------
       // CLOUDFLARE ASSETS
-      // ==================================================
+      // --------------------------------------------------
 
       if (env.ASSETS) {
 
@@ -97,6 +113,9 @@ export default {
         if (asset.status !== 404) {
           return asset;
         }
+
+
+        // SPA fallback
 
         if (
           request.method === "GET" ||
@@ -127,9 +146,9 @@ export default {
       }
 
 
-      // ==================================================
+      // --------------------------------------------------
       // ROOT
-      // ==================================================
+      // --------------------------------------------------
 
       if (
         url.pathname === "/" &&
@@ -146,9 +165,9 @@ export default {
       }
 
 
-      // ==================================================
+      // --------------------------------------------------
       // 404
-      // ==================================================
+      // --------------------------------------------------
 
       return json(
         {
@@ -179,7 +198,10 @@ export default {
 // CHAT
 // ======================================================
 
-async function chat(request, env) {
+async function chat(
+  request,
+  env
+) {
 
   if (!env.GEMINI_API_KEY) {
 
@@ -193,6 +215,10 @@ async function chat(request, env) {
     );
   }
 
+
+  // --------------------------------------------------
+  // PARSE BODY
+  // --------------------------------------------------
 
   let body;
 
@@ -233,9 +259,9 @@ async function chat(request, env) {
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // MODEL
-  // ==================================================
+  // --------------------------------------------------
 
   const requestedModel =
     String(
@@ -244,28 +270,34 @@ async function chat(request, env) {
     );
 
   const model =
-    ALLOWED_MODELS.has(requestedModel)
+    ALLOWED_MODELS.has(
+      requestedModel
+    )
       ? requestedModel
       : DEFAULT_MODEL;
 
 
-  // ==================================================
+  // --------------------------------------------------
   // CONTENTS
-  // ==================================================
+  // --------------------------------------------------
 
   const contents = [];
 
 
-  // ==================================================
+  // --------------------------------------------------
   // HISTORY
-  // ==================================================
+  // --------------------------------------------------
 
   if (
-    Array.isArray(body?.history)
+    Array.isArray(
+      body?.history
+    )
   ) {
 
     const history =
-      body.history.slice(-MAX_HISTORY);
+      body.history
+        .slice(-MAX_HISTORY);
+
 
     for (
       const item of history
@@ -276,17 +308,21 @@ async function chat(request, env) {
           ? "model"
           : "user";
 
+
       const text =
         String(
           item?.content || ""
         ).trim();
 
+
       if (!text) {
         continue;
       }
 
+
       contents.push({
         role,
+
         parts: [
           {
             text
@@ -297,9 +333,9 @@ async function chat(request, env) {
   }
 
 
-  // ==================================================
-  // USER MESSAGE
-  // ==================================================
+  // --------------------------------------------------
+  // USER PARTS
+  // --------------------------------------------------
 
   const parts = [
     {
@@ -308,9 +344,9 @@ async function chat(request, env) {
   ];
 
 
-  // ==================================================
+  // --------------------------------------------------
   // IMAGE / VISION
-  // ==================================================
+  // --------------------------------------------------
 
   if (
     body?.image?.data &&
@@ -327,27 +363,33 @@ async function chat(request, env) {
         body.image.data
       );
 
+
     if (
-      mimeType.startsWith("image/") &&
+      mimeType.startsWith(
+        "image/"
+      ) &&
       data.length > 0
     ) {
 
       parts.push({
+
         inlineData: {
           mimeType,
           data
         }
+
       });
     }
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // FILE
-  // ==================================================
+  // --------------------------------------------------
 
   const file =
     body?.file;
+
 
   if (
     file?.data &&
@@ -370,9 +412,11 @@ async function chat(request, env) {
         "uploaded-file"
       );
 
+
     const estimatedBytes =
       Math.floor(
-        fileData.length * 0.75
+        fileData.length *
+        0.75
       );
 
 
@@ -392,12 +436,13 @@ async function chat(request, env) {
     }
 
 
-    // ==================================================
+    // ------------------------------------------------
     // PDF
-    // ==================================================
+    // ------------------------------------------------
 
     if (
-      mimeType === "application/pdf"
+      mimeType ===
+      "application/pdf"
     ) {
 
       parts.push({
@@ -407,35 +452,42 @@ async function chat(request, env) {
           ". Analyze the document carefully and answer using its contents."
       });
 
+
       parts.push({
+
         inlineData: {
           mimeType,
           data: fileData
         }
+
       });
     }
 
 
-    // ==================================================
-    // IMAGE FILE
-    // ==================================================
+    // ------------------------------------------------
+    // IMAGE
+    // ------------------------------------------------
 
     else if (
-      mimeType.startsWith("image/")
+      mimeType.startsWith(
+        "image/"
+      )
     ) {
 
       parts.push({
+
         inlineData: {
           mimeType,
           data: fileData
         }
+
       });
     }
 
 
-    // ==================================================
-    // TEXT FILE
-    // ==================================================
+    // ------------------------------------------------
+    // TEXT
+    // ------------------------------------------------
 
     else if (
       isTextFile(
@@ -445,6 +497,7 @@ async function chat(request, env) {
     ) {
 
       let decodedText = "";
+
 
       try {
 
@@ -467,6 +520,7 @@ async function chat(request, env) {
             MAX_TEXT_FILE_CHARS
           );
 
+
         parts.push({
           text:
             "Uploaded file: " +
@@ -479,9 +533,9 @@ async function chat(request, env) {
     }
 
 
-    // ==================================================
+    // ------------------------------------------------
     // DOCX
-    // ==================================================
+    // ------------------------------------------------
 
     else if (
       mimeType ===
@@ -498,9 +552,9 @@ async function chat(request, env) {
     }
 
 
-    // ==================================================
-    // OTHER FILE
-    // ==================================================
+    // ------------------------------------------------
+    // OTHER
+    // ------------------------------------------------
 
     else {
 
@@ -516,18 +570,27 @@ async function chat(request, env) {
   }
 
 
+  // --------------------------------------------------
+  // CURRENT MESSAGE
+  // --------------------------------------------------
+
   contents.push({
+
     role: "user",
+
     parts
+
   });
 
 
-  // ==================================================
+  // --------------------------------------------------
   // SYSTEM INSTRUCTION
-  // ==================================================
+  // --------------------------------------------------
 
   const systemInstruction = {
+
     parts: [
+
       {
         text: `
 You are Nexora AI, a premium AI assistant.
@@ -558,20 +621,21 @@ Do not use headings beginning with #.
 
 Do not use unnecessary bold or italic formatting.
 
-For lists, use numbered or simple bullet points.
+For lists, use numbered or simple bullet lists.
 
 For code, use proper code blocks.
 
 Give original responses suited to the current request.
         `.trim()
       }
+
     ]
   };
 
 
-  // ==================================================
+  // --------------------------------------------------
   // GEMINI STREAM ENDPOINT
-  // ==================================================
+  // --------------------------------------------------
 
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
@@ -585,12 +649,14 @@ Give original responses suited to the current request.
 
   let geminiResponse;
 
+
   try {
 
     geminiResponse =
       await fetch(
         endpoint,
         {
+
           method: "POST",
 
           headers: {
@@ -616,6 +682,7 @@ Give original responses suited to the current request.
               }
 
             })
+
         }
       );
 
@@ -633,28 +700,35 @@ Give original responses suited to the current request.
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // GEMINI ERROR
-  // ==================================================
+  // --------------------------------------------------
 
-  if (!geminiResponse.ok) {
+  if (
+    !geminiResponse.ok
+  ) {
 
     const errorText =
       await geminiResponse.text();
 
+
     let errorMessage =
       "Gemini API request failed.";
+
 
     try {
 
       const errorJSON =
-        JSON.parse(errorText);
+        JSON.parse(
+          errorText
+        );
 
       errorMessage =
         errorJSON?.error?.message ||
         errorMessage;
 
     } catch {}
+
 
     return json(
       {
@@ -667,11 +741,13 @@ Give original responses suited to the current request.
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // STREAM
-  // ==================================================
+  // --------------------------------------------------
 
-  if (!geminiResponse.body) {
+  if (
+    !geminiResponse.body
+  ) {
 
     return json(
       {
@@ -691,13 +767,17 @@ Give original responses suited to the current request.
     new TextDecoder();
 
   const reader =
-    geminiResponse.body.getReader();
+    geminiResponse
+      .body
+      .getReader();
 
 
   const stream =
     new ReadableStream({
 
-      async start(controller) {
+      async start(
+        controller
+      ) {
 
         try {
 
@@ -709,9 +789,11 @@ Give original responses suited to the current request.
             } =
               await reader.read();
 
+
             if (done) {
               break;
             }
+
 
             if (value) {
 
@@ -723,8 +805,11 @@ Give original responses suited to the current request.
                   }
                 );
 
+
               controller.enqueue(
-                encoder.encode(chunk)
+                encoder.encode(
+                  chunk
+                )
               );
             }
           }
@@ -737,6 +822,7 @@ Give original responses suited to the current request.
                 error?.message ||
                 "Streaming error."
             });
+
 
           controller.enqueue(
             encoder.encode(
@@ -759,9 +845,11 @@ Give original responses suited to the current request.
   return new Response(
     stream,
     {
+
       status: 200,
 
       headers: {
+
         ...CORS,
 
         "Content-Type":
@@ -773,6 +861,7 @@ Give original responses suited to the current request.
         "Connection":
           "keep-alive"
       }
+
     }
   );
 }
@@ -787,7 +876,9 @@ async function generateImage(
   env
 ) {
 
-  if (!env.GEMINI_API_KEY) {
+  if (
+    !env.GEMINI_API_KEY
+  ) {
 
     return json(
       {
@@ -800,11 +891,12 @@ async function generateImage(
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // BODY
-  // ==================================================
+  // --------------------------------------------------
 
   let body;
+
 
   try {
 
@@ -859,16 +951,21 @@ async function generateImage(
   }
 
 
-  // ==================================================
-  // IMAGE API
-  // ==================================================
+  // --------------------------------------------------
+  // IMAGE MODEL
+  // --------------------------------------------------
 
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
     "v1beta/interactions";
 
 
+  // --------------------------------------------------
+  // REQUEST
+  // --------------------------------------------------
+
   let response;
+
 
   try {
 
@@ -876,14 +973,17 @@ async function generateImage(
       await fetch(
         endpoint,
         {
+
           method: "POST",
 
           headers: {
+
             "Content-Type":
               "application/json",
 
             "x-goog-api-key":
               env.GEMINI_API_KEY
+
           },
 
           body:
@@ -893,22 +993,20 @@ async function generateImage(
                 IMAGE_MODEL,
 
               input: [
+
                 {
                   type: "text",
                   text: prompt
                 }
-              ],
 
-              // IMPORTANT:
-              // This API currently accepts JPEG,
-              // not PNG.
+              ],
 
               response_format: {
 
                 type: "image",
 
                 mime_type:
-                  "image/jpeg",
+                  "image/png",
 
                 aspect_ratio:
                   String(
@@ -921,8 +1019,11 @@ async function generateImage(
                     body?.imageSize ||
                     "1K"
                   )
+
               }
+
             })
+
         }
       );
 
@@ -940,17 +1041,21 @@ async function generateImage(
   }
 
 
-  // ==================================================
-  // IMAGE API ERROR
-  // ==================================================
+  // --------------------------------------------------
+  // API ERROR
+  // --------------------------------------------------
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
 
     const errorText =
       await response.text();
 
+
     let errorMessage =
       "Image generation failed.";
+
 
     try {
 
@@ -959,6 +1064,7 @@ async function generateImage(
           errorText
         );
 
+
       errorMessage =
         errorJSON?.error?.message ||
         errorJSON?.message ||
@@ -966,22 +1072,24 @@ async function generateImage(
 
     } catch {}
 
+
     return json(
       {
         success: false,
-        error: errorMessage,
-        model: IMAGE_MODEL
+        error:
+          errorMessage
       },
       response.status
     );
   }
 
 
-  // ==================================================
-  // PARSE RESPONSE
-  // ==================================================
+  // --------------------------------------------------
+  // RESPONSE
+  // --------------------------------------------------
 
   let data;
+
 
   try {
 
@@ -1001,19 +1109,15 @@ async function generateImage(
   }
 
 
-  // ==================================================
+  // --------------------------------------------------
   // FIND IMAGE
-  // ==================================================
+  // --------------------------------------------------
 
   let imageData = null;
-
-  let mimeType =
-    "image/jpeg";
+  let mimeType = "image/png";
 
 
-  // --------------------------------------------------
-  // DIRECT OUTPUT IMAGE
-  // --------------------------------------------------
+  // New convenience output
 
   if (
     data?.output_image?.data
@@ -1024,64 +1128,17 @@ async function generateImage(
 
     mimeType =
       data.output_image.mime_type ||
-      "image/jpeg";
+      mimeType;
   }
 
 
-  // --------------------------------------------------
-  // OUTPUT ARRAY
-  // --------------------------------------------------
+  // Steps fallback
 
   if (
     !imageData &&
-    Array.isArray(data?.output)
-  ) {
-
-    for (
-      const item of data.output
-    ) {
-
-      if (
-        item?.type === "image" &&
-        item?.data
-      ) {
-
-        imageData =
-          item.data;
-
-        mimeType =
-          item.mime_type ||
-          "image/jpeg";
-
-        break;
-      }
-
-
-      if (
-        item?.type === "image_generation" &&
-        item?.data
-      ) {
-
-        imageData =
-          item.data;
-
-        mimeType =
-          item.mime_type ||
-          "image/jpeg";
-
-        break;
-      }
-    }
-  }
-
-
-  // --------------------------------------------------
-  // STEPS FALLBACK
-  // --------------------------------------------------
-
-  if (
-    !imageData &&
-    Array.isArray(data?.steps)
+    Array.isArray(
+      data?.steps
+    )
   ) {
 
     for (
@@ -1111,7 +1168,7 @@ async function generateImage(
 
           mimeType =
             item.mime_type ||
-            "image/jpeg";
+            mimeType;
 
           break;
         }
@@ -1126,44 +1183,8 @@ async function generateImage(
 
 
   // --------------------------------------------------
-  // BASE64 DATA URL FALLBACK
-  // --------------------------------------------------
-
-  if (
-    !imageData &&
-    typeof data?.imageUrl === "string"
-  ) {
-
-    const imageUrl =
-      data.imageUrl;
-
-    if (
-      imageUrl.startsWith(
-        "data:image/"
-      )
-    ) {
-
-      return json({
-        success: true,
-        service: "Nexora AI",
-        type: "image",
-        model: IMAGE_MODEL,
-        prompt,
-        mimeType:
-          imageUrl.match(
-            /^data:([^;]+)/
-          )?.[1] ||
-          "image/jpeg",
-        imageUrl,
-        image: imageUrl
-      });
-    }
-  }
-
-
-  // ==================================================
   // NO IMAGE
-  // ==================================================
+  // --------------------------------------------------
 
   if (!imageData) {
 
@@ -1180,30 +1201,17 @@ async function generateImage(
   }
 
 
-  // ==================================================
-  // NORMALIZE MIME TYPE
-  // ==================================================
-
-  if (
-    !String(mimeType).startsWith("image/")
-  ) {
-
-    mimeType =
-      "image/jpeg";
-  }
-
-
-  // The current API supports JPEG.
-  // If the API returns another image MIME type,
-  // preserve it only when valid.
+  // --------------------------------------------------
+  // IMAGE URL
+  // --------------------------------------------------
 
   const imageUrl =
     `data:${mimeType};base64,${imageData}`;
 
 
-  // ==================================================
+  // --------------------------------------------------
   // SUCCESS
-  // ==================================================
+  // --------------------------------------------------
 
   return json({
 
@@ -1226,12 +1234,13 @@ async function generateImage(
 
     image:
       imageUrl
+
   });
 }
 
 
 // ======================================================
-// TEXT FILE DETECTION
+// TEXT FILE
 // ======================================================
 
 function isTextFile(
@@ -1244,6 +1253,7 @@ function isTextFile(
       mimeType || ""
     ).toLowerCase();
 
+
   const name =
     String(
       fileName || ""
@@ -1254,13 +1264,21 @@ function isTextFile(
     new Set([
 
       "text/plain",
+
       "text/csv",
+
       "text/html",
+
       "text/css",
+
       "text/javascript",
+
       "application/json",
+
       "application/xml",
+
       "text/xml",
+
       "application/javascript"
 
     ]);
@@ -1276,12 +1294,19 @@ function isTextFile(
   const extensions = [
 
     ".txt",
+
     ".csv",
+
     ".json",
+
     ".html",
+
     ".htm",
+
     ".css",
+
     ".js",
+
     ".xml"
 
   ];
@@ -1295,7 +1320,7 @@ function isTextFile(
 
 
 // ======================================================
-// BASE64 UTF-8 DECODER
+// BASE64 UTF-8
 // ======================================================
 
 function decodeBase64Utf8(
@@ -1304,6 +1329,7 @@ function decodeBase64Utf8(
 
   const binary =
     atob(base64);
+
 
   const bytes =
     new Uint8Array(
@@ -1324,12 +1350,14 @@ function decodeBase64Utf8(
 
   return new TextDecoder(
     "utf-8"
-  ).decode(bytes);
+  ).decode(
+    bytes
+  );
 }
 
 
 // ======================================================
-// JSON RESPONSE
+// JSON
 // ======================================================
 
 function json(
@@ -1346,14 +1374,18 @@ function json(
     ),
 
     {
+
       status,
 
       headers: {
+
         ...CORS,
 
         "Content-Type":
           "application/json; charset=UTF-8"
+
       }
+
     }
   );
 }
