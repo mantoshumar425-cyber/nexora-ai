@@ -4,46 +4,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Nexora AI - Premium AI Assistant">
 <title>Nexora AI</title>
 
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+*{box-sizing:border-box;margin:0;padding:0}
 
 :root{
-  --bg:#000000;
+  --bg:#000;
   --panel:#09090b;
   --surface:#111113;
   --surface2:#1b1b1f;
-  --surface3:#242429;
+  --surface3:#242428;
   --border:#29292f;
-  --text:#f5f5f7;
-  --muted:#9a9aa3;
+  --text:#f7f7f8;
+  --muted:#92929b;
   --accent:#8b5cf6;
   --accent2:#06b6d4;
   --danger:#ff5f6d;
-  --success:#4ade80;
   --shadow:0 25px 80px rgba(0,0,0,.35);
 }
 
 body.light{
-  --bg:#ffffff;
+  --bg:#fff;
   --panel:#f7f7f8;
-  --surface:#ffffff;
-  --surface2:#eeeeef;
-  --surface3:#e4e4e7;
+  --surface:#fff;
+  --surface2:#f0f0f2;
+  --surface3:#e6e6e9;
   --border:#dedee3;
-  --text:#111114;
+  --text:#171719;
   --muted:#66666f;
-  --shadow:0 25px 70px rgba(0,0,0,.12);
+  --shadow:0 20px 60px rgba(0,0,0,.12);
 }
 
-html,
-body{
+html,body{
   width:100%;
   height:100%;
 }
@@ -52,19 +45,12 @@ body{
   overflow:hidden;
   background:var(--bg);
   color:var(--text);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,
+  BlinkMacSystemFont,"Segoe UI",sans-serif;
+  transition:background .25s,color .25s;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
+/* ================= SIDEBAR ================= */
 
 .sidebar{
   position:fixed;
@@ -72,57 +58,48 @@ body{
   width:280px;
   background:var(--panel);
   border-right:1px solid var(--border);
+  z-index:100;
   display:flex;
   flex-direction:column;
-  z-index:100;
   transition:.25s ease;
 }
 
 .brand{
-  height:70px;
+  height:68px;
+  padding:0 16px;
   display:flex;
   align-items:center;
   gap:11px;
-  padding:0 16px;
 }
 
 .logo{
   width:39px;
   height:39px;
+  border-radius:13px;
   display:grid;
   place-items:center;
-  border-radius:13px;
   color:#fff;
+  font-size:18px;
   font-weight:900;
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
-  box-shadow:
-    0 8px 30px rgba(139,92,246,.2);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 30px rgba(99,102,241,.25);
 }
 
 .brand-name{
   font-size:19px;
   font-weight:800;
+  letter-spacing:-.4px;
 }
 
 .brand-name span{
-  background:
-    linear-gradient(
-      90deg,
-      #a78bfa,
-      #22d3ee
-    );
+  background:linear-gradient(90deg,#a78bfa,#22d3ee);
   -webkit-background-clip:text;
   color:transparent;
 }
 
 .new-chat{
-  margin:0 13px 10px;
   height:45px;
+  margin:0 13px 11px;
   border:1px solid var(--border);
   border-radius:12px;
   background:var(--surface);
@@ -131,10 +108,12 @@ body{
   font-weight:700;
   text-align:left;
   padding:0 14px;
+  transition:.2s;
 }
 
 .new-chat:hover{
   background:var(--surface2);
+  transform:translateY(-1px);
 }
 
 .search-wrap{
@@ -153,12 +132,12 @@ body{
 }
 
 .history-label{
-  padding:5px 17px 8px;
+  padding:4px 17px 8px;
   color:var(--muted);
   font-size:10px;
   font-weight:800;
-  letter-spacing:1px;
   text-transform:uppercase;
+  letter-spacing:1.2px;
 }
 
 .history{
@@ -167,14 +146,24 @@ body{
   padding:0 8px;
 }
 
+.history::-webkit-scrollbar{
+  width:4px;
+}
+
+.history::-webkit-scrollbar-thumb{
+  background:var(--border);
+  border-radius:20px;
+}
+
 .chat-row{
   width:100%;
   display:flex;
   align-items:center;
   gap:8px;
+  padding:10px;
+  margin-bottom:2px;
   border:0;
   border-radius:10px;
-  padding:10px;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
@@ -197,11 +186,12 @@ body{
 }
 
 .chat-menu{
+  opacity:0;
   border:0;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
-  opacity:0;
+  padding:3px;
 }
 
 .chat-row:hover .chat-menu{
@@ -220,8 +210,8 @@ body{
   border-radius:10px;
   background:transparent;
   color:var(--muted);
-  cursor:pointer;
   text-align:left;
+  cursor:pointer;
 }
 
 .sidebar-btn:hover{
@@ -229,9 +219,7 @@ body{
   color:var(--text);
 }
 
-/* =========================
-   MAIN
-========================= */
+/* ================= MAIN ================= */
 
 .main{
   position:absolute;
@@ -245,7 +233,7 @@ body{
   flex-shrink:0;
   display:flex;
   align-items:center;
-  padding:0 16px;
+  padding:0 17px;
   border-bottom:1px solid var(--border);
   background:var(--bg);
   z-index:20;
@@ -257,27 +245,26 @@ body{
   background:transparent;
   color:var(--text);
   font-size:22px;
-  margin-right:10px;
-  cursor:pointer;
+  margin-right:12px;
 }
 
 .model-button{
   border:0;
   background:transparent;
   color:var(--text);
+  cursor:pointer;
+  font-weight:750;
   display:flex;
   align-items:center;
   gap:8px;
-  font-weight:750;
-  cursor:pointer;
 }
 
 .status-dot{
   width:8px;
   height:8px;
   border-radius:50%;
-  background:var(--success);
-  box-shadow:0 0 12px var(--success);
+  background:#4ade80;
+  box-shadow:0 0 12px #4ade80;
 }
 
 .header-space{
@@ -300,9 +287,7 @@ body{
   color:var(--text);
 }
 
-/* =========================
-   CHAT AREA
-========================= */
+/* ================= CHAT AREA ================= */
 
 .chat-area{
   flex:1;
@@ -312,9 +297,9 @@ body{
 
 .welcome{
   min-height:100%;
-  max-width:940px;
+  max-width:920px;
   margin:auto;
-  padding:30px 20px 180px;
+  padding:35px 20px 170px;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -322,34 +307,31 @@ body{
 }
 
 .welcome-logo{
-  width:78px;
-  height:78px;
+  width:82px;
+  height:82px;
+  border-radius:26px;
   display:grid;
   place-items:center;
-  border-radius:25px;
   color:#fff;
-  font-size:30px;
+  font-size:31px;
   font-weight:900;
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   box-shadow:
-    0 25px 80px rgba(99,80,255,.24);
+    0 20px 70px rgba(99,102,241,.24),
+    inset 0 1px rgba(255,255,255,.25);
 }
 
 .welcome h1{
-  margin-top:23px;
-  font-size:clamp(30px,6vw,52px);
-  letter-spacing:-2px;
+  margin-top:22px;
+  font-size:clamp(31px,6vw,52px);
+  letter-spacing:-2.5px;
   text-align:center;
 }
 
 .welcome p{
-  margin-top:9px;
+  margin-top:8px;
   color:var(--muted);
+  text-align:center;
 }
 
 .cards{
@@ -357,13 +339,13 @@ body{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin-top:35px;
+  margin-top:34px;
 }
 
 .card{
-  border:1px solid var(--border);
-  border-radius:15px;
   padding:18px;
+  border:1px solid var(--border);
+  border-radius:16px;
   background:var(--surface);
   color:var(--text);
   cursor:pointer;
@@ -372,8 +354,9 @@ body{
 }
 
 .card:hover{
-  transform:translateY(-2px);
   background:var(--surface2);
+  transform:translateY(-2px);
+  border-color:#45454d;
 }
 
 .card-title{
@@ -387,12 +370,10 @@ body{
   font-size:12px;
 }
 
-/* =========================
-   MESSAGES
-========================= */
+/* ================= MESSAGES ================= */
 
 .messages{
-  max-width:940px;
+  max-width:900px;
   width:100%;
   margin:auto;
   padding-bottom:170px;
@@ -402,29 +383,26 @@ body{
   display:flex;
   gap:14px;
   padding:25px 20px;
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid color-mix(
+    in srgb,var(--border) 45%,transparent
+  );
 }
 
 .avatar{
   width:37px;
   height:37px;
   flex:0 0 37px;
-  display:grid;
-  place-items:center;
   border-radius:11px;
   background:var(--surface2);
+  display:grid;
+  place-items:center;
   font-size:10px;
-  font-weight:800;
+  font-weight:850;
 }
 
 .assistant .avatar{
   color:#fff;
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
 }
 
 .message-body{
@@ -446,29 +424,64 @@ body{
   overflow-wrap:anywhere;
 }
 
-.message-image{
-  max-width:min(500px,100%);
-  max-height:350px;
-  margin-top:10px;
-  border-radius:14px;
+.message-text code{
+  font-family:
+    ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.code-wrap{
+  margin:12px 0;
   border:1px solid var(--border);
-  object-fit:contain;
+  border-radius:13px;
+  overflow:hidden;
+  background:#09090b;
+}
+
+.code-head{
+  height:36px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#141418;
+  border-bottom:1px solid #29292f;
+  color:#aaa;
+  font-size:11px;
+}
+
+.code-copy{
+  border:0;
+  background:#222228;
+  color:#ddd;
+  border-radius:7px;
+  padding:5px 8px;
+  cursor:pointer;
+}
+
+.code-content{
+  padding:15px;
+  overflow:auto;
+  color:#eee;
+  font-family:
+    ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;
+  line-height:1.65;
+  white-space:pre;
 }
 
 .actions{
   display:flex;
-  flex-wrap:wrap;
   gap:4px;
   margin-top:9px;
 }
 
 .action{
   border:0;
-  border-radius:8px;
-  padding:6px 8px;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
+  padding:6px 8px;
+  border-radius:7px;
   font-size:12px;
 }
 
@@ -477,9 +490,7 @@ body{
   color:var(--text);
 }
 
-/* =========================
-   COMPOSER
-========================= */
+/* ================= COMPOSER ================= */
 
 .composer-zone{
   position:absolute;
@@ -488,40 +499,62 @@ body{
   bottom:0;
   padding:14px 14px 17px;
   pointer-events:none;
-  background:
-    linear-gradient(
-      to top,
-      var(--bg) 68%,
-      transparent
-    );
+  background:linear-gradient(
+    to top,
+    var(--bg) 65%,
+    transparent
+  );
 }
 
 .composer{
-  max-width:940px;
+  max-width:900px;
   margin:auto;
   pointer-events:auto;
 }
 
+.mode-row{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:8px;
+}
+
+.mode-btn{
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--muted);
+  border-radius:20px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-size:11px;
+}
+
+.mode-btn.active{
+  color:var(--text);
+  background:var(--surface2);
+  border-color:#4b4b54;
+}
+
 .input-box{
   border:1px solid var(--border);
-  border-radius:19px;
   background:var(--surface);
+  border-radius:19px;
   padding:8px 9px 8px 13px;
   box-shadow:var(--shadow);
 }
 
 textarea{
   width:100%;
-  min-height:42px;
-  max-height:180px;
+  min-height:40px;
+  max-height:170px;
   resize:none;
   border:0;
   outline:0;
   background:transparent;
   color:var(--text);
-  font:inherit;
+  font-family:inherit;
   font-size:15px;
-  line-height:1.55;
+  line-height:1.5;
   padding:8px 2px;
 }
 
@@ -536,9 +569,7 @@ textarea::placeholder{
 }
 
 .attach,
-.voice,
-.screen-btn,
-.code-btn{
+.voice{
   width:38px;
   height:38px;
   border:0;
@@ -546,13 +577,11 @@ textarea::placeholder{
   background:transparent;
   color:var(--muted);
   cursor:pointer;
-  font-size:16px;
+  font-size:17px;
 }
 
 .attach:hover,
-.voice:hover,
-.screen-btn:hover,
-.code-btn:hover{
+.voice:hover{
   background:var(--surface2);
   color:var(--text);
 }
@@ -564,12 +593,7 @@ textarea::placeholder{
   border:0;
   border-radius:12px;
   color:#fff;
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   cursor:pointer;
   font-size:19px;
   font-weight:900;
@@ -580,45 +604,38 @@ textarea::placeholder{
   cursor:wait;
 }
 
-.stop-btn{
-  display:none;
-  margin-left:auto;
-  width:41px;
-  height:41px;
-  border:0;
-  border-radius:12px;
-  color:#fff;
-  background:var(--danger);
-  cursor:pointer;
-}
-
 .note{
-  margin-top:7px;
   text-align:center;
   color:var(--muted);
   font-size:10px;
-  opacity:.75;
+  opacity:.7;
+  margin-top:7px;
 }
 
-/* =========================
-   ATTACHMENT
-========================= */
+/* ================= ATTACHMENT ================= */
 
 .attachment-preview{
   display:none;
-  align-items:center;
-  gap:9px;
   margin-bottom:7px;
   padding:8px 10px;
-  border:1px solid var(--border);
   border-radius:11px;
   background:var(--surface2);
-  color:var(--muted);
   font-size:12px;
+  color:var(--muted);
 }
 
 .attachment-preview.show{
   display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.preview-thumb{
+  width:30px;
+  height:30px;
+  border-radius:7px;
+  object-fit:cover;
+  display:none;
 }
 
 .remove-file{
@@ -630,161 +647,41 @@ textarea::placeholder{
   font-size:18px;
 }
 
-/* =========================
-   SCREEN PANEL
-========================= */
+/* ================= TYPING ================= */
 
-.screen-panel{
-  position:fixed;
-  right:18px;
-  bottom:115px;
-  width:min(390px,calc(100% - 36px));
-  display:none;
-  z-index:220;
-  border:1px solid var(--border);
-  border-radius:17px;
-  overflow:hidden;
-  background:var(--panel);
-  box-shadow:var(--shadow);
-}
-
-.screen-panel.show{
-  display:block;
-}
-
-.screen-head{
+.typing{
   display:flex;
   align-items:center;
-  padding:11px 13px;
-  border-bottom:1px solid var(--border);
+  gap:4px;
+  padding:7px 0;
 }
 
-.screen-title{
-  flex:1;
-  font-weight:750;
-  font-size:13px;
+.dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--muted);
+  animation:bounce 1.1s infinite;
 }
 
-.screen-video{
-  width:100%;
-  display:block;
-  background:#000;
-  max-height:230px;
-  object-fit:contain;
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+
+@keyframes bounce{
+  0%,60%,100%{transform:translateY(0)}
+  30%{transform:translateY(-4px)}
 }
 
-.screen-actions{
-  display:flex;
-  gap:7px;
-  padding:10px;
-}
-
-.screen-action{
-  flex:1;
-  height:38px;
-  border:1px solid var(--border);
-  border-radius:9px;
-  background:var(--surface);
-  color:var(--text);
-  cursor:pointer;
-}
-
-/* =========================
-   CODE PREVIEW
-========================= */
-
-.code-panel{
-  position:fixed;
-  inset:7% 7%;
-  display:none;
-  flex-direction:column;
-  z-index:400;
-  border:1px solid var(--border);
-  border-radius:18px;
-  overflow:hidden;
-  background:var(--panel);
-  box-shadow:var(--shadow);
-}
-
-.code-panel.show{
-  display:flex;
-}
-
-.code-head{
-  min-height:54px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:0 13px;
-  border-bottom:1px solid var(--border);
-}
-
-.code-head strong{
-  flex:1;
-}
-
-.code-editor{
-  flex:1;
-  width:100%;
-  resize:none;
-  border:0;
-  outline:0;
-  padding:18px;
-  background:#0b0b0d;
-  color:#e5e7eb;
-  font:13px/1.6
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Consolas,
-    monospace;
-}
-
-.code-preview{
-  display:none;
-  width:100%;
-  flex:1;
-  border:0;
-  background:#fff;
-}
-
-.code-preview.show{
-  display:block;
-}
-
-.code-editor.hide{
-  display:none;
-}
-
-.code-actions{
-  display:flex;
-  gap:7px;
-  padding:9px;
-  border-top:1px solid var(--border);
-}
-
-.code-action{
-  height:38px;
-  padding:0 13px;
-  border:1px solid var(--border);
-  border-radius:9px;
-  background:var(--surface);
-  color:var(--text);
-  cursor:pointer;
-}
-
-/* =========================
-   SETTINGS
-========================= */
+/* ================= MODAL ================= */
 
 .backdrop{
   position:fixed;
   inset:0;
   display:none;
   place-items:center;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(7px);
-  z-index:500;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(8px);
+  z-index:300;
 }
 
 .backdrop.show{
@@ -792,14 +689,14 @@ textarea::placeholder{
 }
 
 .modal{
-  width:min(470px,calc(100% - 28px));
-  max-height:85vh;
+  width:min(460px,calc(100% - 28px));
+  max-height:90vh;
   overflow:auto;
-  padding:21px;
-  border:1px solid var(--border);
-  border-radius:18px;
   background:var(--panel);
-  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:21px;
+  box-shadow:0 30px 100px rgba(0,0,0,.5);
 }
 
 .modal-head{
@@ -817,7 +714,7 @@ textarea::placeholder{
   background:transparent;
   color:var(--muted);
   cursor:pointer;
-  font-size:23px;
+  font-size:22px;
 }
 
 .setting{
@@ -826,26 +723,30 @@ textarea::placeholder{
 
 .setting-label{
   display:block;
-  margin-bottom:8px;
   color:var(--muted);
   font-size:12px;
+  margin-bottom:8px;
 }
 
 .select,
 .setting-btn{
   width:100%;
-  min-height:42px;
+  height:43px;
   border:1px solid var(--border);
-  border-radius:10px;
-  outline:0;
+  border-radius:11px;
   background:var(--surface);
   color:var(--text);
   padding:0 11px;
+  outline:0;
 }
 
 .setting-btn{
   cursor:pointer;
   text-align:left;
+}
+
+.setting-btn:hover{
+  background:var(--surface2);
 }
 
 .theme-row{
@@ -855,33 +756,35 @@ textarea::placeholder{
 
 .theme-btn{
   flex:1;
-  height:42px;
+  height:43px;
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:11px;
   background:var(--surface);
   color:var(--text);
   cursor:pointer;
 }
 
-/* =========================
-   TOAST
-========================= */
+.theme-btn:hover{
+  background:var(--surface2);
+}
+
+/* ================= TOAST ================= */
 
 .toast{
   position:fixed;
   left:50%;
-  bottom:95px;
+  bottom:96px;
   transform:translate(-50%,15px);
   opacity:0;
   pointer-events:none;
-  z-index:800;
-  padding:10px 15px;
+  background:var(--surface3);
   border:1px solid var(--border);
-  border-radius:10px;
-  background:var(--surface2);
   color:var(--text);
+  padding:10px 16px;
+  border-radius:11px;
   font-size:12px;
   transition:.2s;
+  z-index:500;
 }
 
 .toast.show{
@@ -889,9 +792,7 @@ textarea::placeholder{
   transform:translate(-50%,0);
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* ================= MOBILE ================= */
 
 .overlay{
   display:none;
@@ -932,12 +833,13 @@ textarea::placeholder{
   }
 
   .composer-zone{
-    padding-left:8px;
-    padding-right:8px;
+    padding-left:7px;
+    padding-right:7px;
   }
 
-  .code-panel{
-    inset:2% 2%;
+  .welcome{
+    padding-left:15px;
+    padding-right:15px;
   }
 }
 </style>
@@ -963,21 +865,16 @@ textarea::placeholder{
       id="search"
       class="search"
       placeholder="Search chats..."
-      autocomplete="off"
+      oninput="renderHistory()"
     >
   </div>
 
-  <div class="history-label">
-    Chats
-  </div>
+  <div class="history-label">Chats</div>
 
   <div class="history" id="history"></div>
 
   <div class="sidebar-footer">
-    <button
-      class="sidebar-btn"
-      onclick="openSettings()"
-    >
+    <button class="sidebar-btn" onclick="openSettings()">
       ⚙️ Settings
     </button>
   </div>
@@ -1006,9 +903,7 @@ textarea::placeholder{
     onclick="openSettings()"
   >
     <span class="status-dot"></span>
-    <span id="headerModel">
-      Nexora AI
-    </span>
+    <span id="headerModel">Nexora AI</span>
     ▾
   </button>
 
@@ -1032,21 +927,16 @@ textarea::placeholder{
 
 </header>
 
-
 <div class="chat-area" id="chatArea">
 
 <section class="welcome" id="welcome">
 
-  <div class="welcome-logo">
-    N
-  </div>
+  <div class="welcome-logo">N</div>
 
-  <h1>
-    What can I help with?
-  </h1>
+  <h1>What can I help with?</h1>
 
   <p>
-    Your intelligent assistant — Nexora AI
+    A premium intelligent workspace powered by Nexora AI
   </p>
 
   <div class="cards">
@@ -1055,47 +945,39 @@ textarea::placeholder{
       class="card"
       onclick="suggest('Explain photosynthesis in simple words')"
     >
-      <div class="card-title">
-        📚 Learn
-      </div>
+      <div class="card-title">📚 Learn</div>
       <div class="card-desc">
-        Understand difficult topics easily
+        Understand difficult topics clearly
       </div>
     </button>
 
     <button
       class="card"
-      onclick="suggest('Help me build a modern website')"
+      onclick="suggest('Create a modern website idea for me')"
     >
-      <div class="card-title">
-        💡 Create
-      </div>
+      <div class="card-title">💡 Brainstorm</div>
       <div class="card-desc">
-        Build ideas, projects and websites
+        Generate creative and useful ideas
       </div>
     </button>
 
     <button
       class="card"
-      onclick="suggest('Find and explain the bug in this code')"
+      onclick="suggest('Write a professional introduction for my project')"
     >
-      <div class="card-title">
-        💻 Code
-      </div>
+      <div class="card-title">✍️ Write</div>
       <div class="card-desc">
-        Write, debug and improve code
+        Create polished original content
       </div>
     </button>
 
     <button
       class="card"
-      onclick="suggest('Explain artificial intelligence simply')"
+      onclick="activateImageMode()"
     >
-      <div class="card-title">
-        🤖 Explore
-      </div>
+      <div class="card-title">🎨 Create image</div>
       <div class="card-desc">
-        Explore AI and technology
+        Generate an image from your idea
       </div>
     </button>
 
@@ -1110,7 +992,6 @@ textarea::placeholder{
 
 </div>
 
-
 <div class="composer-zone">
 
 <form
@@ -1118,225 +999,117 @@ textarea::placeholder{
   id="composer"
 >
 
-  <div
-    class="attachment-preview"
-    id="attachmentPreview"
+<div class="mode-row">
+
+  <button
+    type="button"
+    class="mode-btn active"
+    id="chatMode"
+    onclick="setMode('chat')"
   >
-    <span id="attachmentName"></span>
+    💬 Chat
+  </button>
 
-    <button
-      type="button"
-      class="remove-file"
-      onclick="removeFile()"
-    >
-      ×
-    </button>
-  </div>
+  <button
+    type="button"
+    class="mode-btn"
+    id="imageMode"
+    onclick="setMode('image')"
+  >
+    🎨 Image
+  </button>
 
+  <button
+    type="button"
+    class="mode-btn"
+    id="codeMode"
+    onclick="setMode('code')"
+  >
+    💻 Code
+  </button>
 
-  <div class="input-box">
+</div>
 
-    <textarea
-      id="message"
-      rows="1"
-      placeholder="Message Nexora AI..."
-    ></textarea>
+<div
+  class="attachment-preview"
+  id="attachmentPreview"
+>
 
-    <div class="input-actions">
+  <img
+    class="preview-thumb"
+    id="previewThumb"
+    alt=""
+  >
 
-      <button
-        type="button"
-        class="attach"
-        onclick="document.getElementById('file').click()"
-        title="Attach file"
-      >
-        ＋
-      </button>
+  <span id="attachmentName"></span>
 
-      <input
-        id="file"
-        type="file"
-        hidden
-        accept="image/*,.pdf,.txt,.csv,.json,.html,.htm,.css,.js,.docx"
-      >
+  <button
+    type="button"
+    class="remove-file"
+    onclick="removeFile()"
+  >
+    ×
+  </button>
 
-      <button
-        type="button"
-        class="voice"
-        onclick="startVoice()"
-        title="Voice input"
-      >
-        🎙
-      </button>
+</div>
 
-      <button
-        type="button"
-        class="screen-btn"
-        onclick="toggleScreen()"
-        title="Live Screen"
-      >
-        🖥
-      </button>
+<div class="input-box">
 
-      <button
-        type="button"
-        class="code-btn"
-        onclick="openCodeEditor()"
-        title="Coding"
-      >
-        </ >
-      </button>
+<textarea
+  id="message"
+  rows="1"
+  placeholder="Message Nexora AI..."
+></textarea>
 
-      <button
-        type="submit"
-        class="send"
-        id="send"
-      >
-        ↑
-      </button>
+<div class="input-actions">
 
-      <button
-        type="button"
-        class="stop-btn"
-        id="stop"
-        onclick="stopGeneration()"
-      >
-        ■
-      </button>
+<button
+  type="button"
+  class="attach"
+  onclick="document.getElementById('file').click()"
+  title="Attach file"
+>
+  ＋
+</button>
 
-    </div>
+<input
+  id="file"
+  type="file"
+  hidden
+  accept="image/*,.txt,.pdf,.doc,.docx"
+  onchange="fileSelected(this)"
+>
 
-  </div>
+<button
+  type="button"
+  class="voice"
+  onclick="startVoice()"
+  title="Voice input"
+>
+  🎙
+</button>
 
-  <div class="note">
-    Nexora AI can make mistakes. Check important information.
-  </div>
+<button
+  type="submit"
+  class="send"
+  id="send"
+>
+  ↑
+</button>
+
+</div>
+
+</div>
+
+<div class="note">
+Nexora AI can make mistakes. Check important information.
+</div>
 
 </form>
 
 </div>
 
 </main>
-
-
-<!-- SCREEN PANEL -->
-
-<div
-  class="screen-panel"
-  id="screenPanel"
->
-
-  <div class="screen-head">
-    <div class="screen-title">
-      🟢 Live Screen
-    </div>
-
-    <button
-      class="close"
-      onclick="stopScreen()"
-    >
-      ×
-    </button>
-  </div>
-
-  <video
-    id="screenVideo"
-    class="screen-video"
-    autoplay
-    muted
-    playsinline
-  ></video>
-
-  <div class="screen-actions">
-
-    <button
-      class="screen-action"
-      onclick="captureScreen()"
-    >
-      📸 Send snapshot
-    </button>
-
-    <button
-      class="screen-action"
-      onclick="stopScreen()"
-    >
-      Stop
-    </button>
-
-  </div>
-
-</div>
-
-
-<!-- CODE PANEL -->
-
-<div
-  class="code-panel"
-  id="codePanel"
->
-
-  <div class="code-head">
-
-    <strong>
-      Nexora Code Lab
-    </strong>
-
-    <button
-      class="close"
-      onclick="closeCodeEditor()"
-    >
-      ×
-    </button>
-
-  </div>
-
-  <textarea
-    id="codeEditor"
-    class="code-editor"
-    spellcheck="false"
-    placeholder="Write HTML, CSS and JavaScript here..."
-  ></textarea>
-
-  <iframe
-    id="codePreview"
-    class="code-preview"
-    sandbox="allow-scripts"
-  ></iframe>
-
-  <div class="code-actions">
-
-    <button
-      class="code-action"
-      onclick="runCode()"
-    >
-      ▶ Run
-    </button>
-
-    <button
-      class="code-action"
-      onclick="showCode()"
-    >
-      Code
-    </button>
-
-    <button
-      class="code-action"
-      onclick="showPreview()"
-    >
-      Preview
-    </button>
-
-    <button
-      class="code-action"
-      onclick="copyCode()"
-    >
-      Copy
-    </button>
-
-  </div>
-
-</div>
-
 
 <!-- SETTINGS -->
 
@@ -1351,212 +1124,151 @@ textarea::placeholder{
   onclick="event.stopPropagation()"
 >
 
-  <div class="modal-head">
+<div class="modal-head">
 
-    <h2>
-      Nexora Settings
-    </h2>
+<h2>Nexora Settings</h2>
 
-    <button
-      class="close"
-      onclick="closeSettings()"
-    >
-      ×
-    </button>
+<button
+  class="close"
+  onclick="closeSettings()"
+>
+×
+</button>
 
-  </div>
+</div>
 
+<div class="setting">
 
-  <div class="setting">
+<span class="setting-label">
+Appearance
+</span>
 
-    <span class="setting-label">
-      Appearance
-    </span>
+<div class="theme-row">
 
-    <div class="theme-row">
+<button
+  class="theme-btn"
+  onclick="setTheme('light')"
+>
+☀ Light
+</button>
 
-      <button
-        class="theme-btn"
-        onclick="setTheme('light')"
-      >
-        ☀ Light
-      </button>
-
-      <button
-        class="theme-btn"
-        onclick="setTheme('dark')"
-      >
-        ☾ Dark
-      </button>
-
-      <button
-        class="theme-btn"
-        onclick="setTheme('system')"
-      >
-        ◐ System
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <div class="setting">
-
-    <span class="setting-label">
-      AI Model
-    </span>
-
-    <select
-      class="select"
-      id="modelSelect"
-    >
-      <option value="gemini-3.6-flash">
-        Gemini 3.6 Flash
-      </option>
-    </select>
-
-  </div>
-
-
-  <div class="setting">
-
-    <span class="setting-label">
-      Conversations
-    </span>
-
-    <button
-      class="setting-btn"
-      onclick="clearHistory()"
-    >
-      🗑 Delete all chat history
-    </button>
-
-  </div>
-
-
-  <div class="setting">
-
-    <span class="setting-label">
-      Keyboard shortcuts
-    </span>
-
-    <button
-      class="setting-btn"
-      onclick="showShortcuts()"
-    >
-      ⌨ View shortcuts
-    </button>
-
-  </div>
+<button
+  class="theme-btn"
+  onclick="setTheme('dark')"
+>
+☾ Dark
+</button>
 
 </div>
 
 </div>
 
+<div class="setting">
+
+<span class="setting-label">
+AI Model
+</span>
+
+<select
+  class="select"
+  id="modelSelect"
+  onchange="changeModel()"
+>
+
+<option value="gemini-3.6-flash">
+Gemini 3.6 Flash
+</option>
+
+</select>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+Chat history
+</span>
+
+<button
+  class="setting-btn"
+  onclick="clearHistory()"
+>
+🗑 Delete all chat history
+</button>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+About
+</span>
+
+<button
+  class="setting-btn"
+  onclick="toast('Nexora AI — Premium AI Workspace')"
+>
+✨ Nexora AI Premium
+</button>
+
+</div>
+
+</div>
+
+</div>
 
 <div
   class="toast"
   id="toast"
 ></div>
 
-
 <script>
 
-/* =====================================================
+/* =================================================
    CONFIG
-===================================================== */
+================================================= */
 
-const API = "/api/chat";
+const API="/api/chat";
+const IMAGE_API="/api/generate-image";
 
-const DEFAULT_MODEL =
-  "gemini-3.6-flash";
+const DEFAULT_MODEL="gemini-3.6-flash";
 
 
-/* =====================================================
+/* =================================================
    STATE
-===================================================== */
+================================================= */
 
-let chats = [];
-
-let currentChat = null;
-
-let conversation = [];
-
-let selectedFile = null;
-
-let selectedImage = null;
-
-let selectedGenericFile = null;
-
-let sending = false;
-
-let abortController = null;
-
-let screenStream = null;
-
-let screenSnapshot = null;
+let chats=[];
+let currentChat=null;
+let conversation=[];
+let selectedFile=null;
+let selectedImage=null;
+let sending=false;
+let currentMode="chat";
+let selectedModel=DEFAULT_MODEL;
 
 
-/* =====================================================
+/* =================================================
    ELEMENTS
-===================================================== */
+================================================= */
 
-const input =
-  document.getElementById("message");
-
-const send =
-  document.getElementById("send");
-
-const stop =
-  document.getElementById("stop");
-
-const messages =
-  document.getElementById("messages");
-
-const welcome =
-  document.getElementById("welcome");
-
-const chatArea =
-  document.getElementById("chatArea");
-
-const historyBox =
-  document.getElementById("history");
+const input=document.getElementById("message");
+const send=document.getElementById("send");
+const messages=document.getElementById("messages");
+const welcome=document.getElementById("welcome");
+const chatArea=document.getElementById("chatArea");
+const historyBox=document.getElementById("history");
 
 
-/* =====================================================
+/* =================================================
    THEME
-===================================================== */
+================================================= */
 
 function setTheme(theme){
 
-  if(theme === "system"){
-
-    const dark =
-      window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-
-    document.body.classList.toggle(
-      "light",
-      !dark
-    );
-
-    localStorage.setItem(
-      "nexora_theme",
-      "system"
-    );
-
-    document.getElementById(
-      "themeIcon"
-    ).textContent = "◐";
-
-    return;
-  }
-
   document.body.classList.toggle(
     "light",
-    theme === "light"
+    theme==="light"
   );
 
   localStorage.setItem(
@@ -1566,66 +1278,116 @@ function setTheme(theme){
 
   document.getElementById(
     "themeIcon"
-  ).textContent =
-    theme === "light"
-      ? "☀"
-      : "☾";
+  ).textContent=
+    theme==="light" ? "☀" : "☾";
 }
-
 
 function toggleTheme(){
 
-  const isLight =
-    document.body.classList.contains(
-      "light"
-    );
+  const light=
+    document.body.classList.contains("light");
 
   setTheme(
-    isLight
-      ? "dark"
-      : "light"
+    light ? "dark" : "light"
   );
 }
-
 
 function loadTheme(){
 
   setTheme(
-    localStorage.getItem(
-      "nexora_theme"
-    ) || "dark"
+    localStorage.getItem("nexora_theme") ||
+    "dark"
   );
 }
 
 
-/* =====================================================
+/* =================================================
+   MODE
+================================================= */
+
+function setMode(mode){
+
+  currentMode=mode;
+
+  document
+    .getElementById("chatMode")
+    .classList.toggle(
+      "active",
+      mode==="chat"
+    );
+
+  document
+    .getElementById("imageMode")
+    .classList.toggle(
+      "active",
+      mode==="image"
+    );
+
+  document
+    .getElementById("codeMode")
+    .classList.toggle(
+      "active",
+      mode==="code"
+    );
+
+  if(mode==="image"){
+
+    input.placeholder=
+      "Describe the image you want to create...";
+
+  }else if(mode==="code"){
+
+    input.placeholder=
+      "Describe the code you want...";
+
+  }else{
+
+    input.placeholder=
+      "Message Nexora AI...";
+
+  }
+
+  input.focus();
+}
+
+function activateImageMode(){
+
+  setMode("image");
+
+  input.value="Create a premium futuristic AI artwork";
+
+  resizeInput();
+
+  input.focus();
+}
+
+
+/* =================================================
    STORAGE
-===================================================== */
+================================================= */
 
 function loadChats(){
 
   try{
 
-    chats =
-      JSON.parse(
-        localStorage.getItem(
-          "nexora_chats"
-        ) || "[]"
-      );
+    chats=JSON.parse(
+      localStorage.getItem(
+        "nexora_chats"
+      ) || "[]"
+    );
 
     if(!Array.isArray(chats)){
-      chats = [];
+      chats=[];
     }
 
   }catch{
 
-    chats = [];
+    chats=[];
 
   }
 
   renderHistory();
 }
-
 
 function saveChats(){
 
@@ -1636,209 +1398,182 @@ function saveChats(){
 }
 
 
-/* =====================================================
+/* =================================================
    NEW CHAT
-===================================================== */
+================================================= */
 
 function newChat(){
 
-  currentChat = null;
+  currentChat=null;
+  conversation=[];
 
-  conversation = [];
+  messages.innerHTML="";
+  messages.style.display="none";
+  welcome.style.display="flex";
 
-  messages.innerHTML = "";
-
-  messages.style.display =
-    "none";
-
-  welcome.style.display =
-    "flex";
-
-  input.value = "";
+  input.value="";
 
   removeFile();
+
+  setMode("chat");
 
   resizeInput();
 
   closeSidebar();
 
-  renderHistory();
-
   input.focus();
+
+  renderHistory();
 }
 
 
-/* =====================================================
-   MESSAGE UI
-===================================================== */
+/* =================================================
+   MESSAGE RENDERING
+================================================= */
 
-function createMessage(
-  role,
-  text,
-  imageData = null
-){
+function createMessage(role,text){
 
-  welcome.style.display =
-    "none";
+  welcome.style.display="none";
+  messages.style.display="block";
 
-  messages.style.display =
-    "block";
+  const article=document.createElement("article");
 
+  article.className=
+    "message "+role;
 
-  const article =
-    document.createElement(
-      "article"
-    );
+  const avatar=document.createElement("div");
 
-  article.className =
-    "message " + role;
+  avatar.className="avatar";
 
+  avatar.textContent=
+    role==="user" ? "You" : "N";
 
-  const avatar =
-    document.createElement(
-      "div"
-    );
+  const body=document.createElement("div");
 
-  avatar.className =
-    "avatar";
+  body.className="message-body";
 
-  avatar.textContent =
-    role === "user"
-      ? "You"
-      : "N";
+  const name=document.createElement("div");
 
+  name.className="message-name";
 
-  const body =
-    document.createElement(
-      "div"
-    );
-
-  body.className =
-    "message-body";
-
-
-  const name =
-    document.createElement(
-      "div"
-    );
-
-  name.className =
-    "message-name";
-
-  name.textContent =
-    role === "user"
+  name.textContent=
+    role==="user"
       ? "You"
       : "Nexora AI";
 
+  const textElement=document.createElement("div");
 
-  const textElement =
-    document.createElement(
-      "div"
-    );
+  textElement.className="message-text";
 
-  textElement.className =
-    "message-text";
-
-  textElement.textContent =
-    text || "";
-
+  renderAnswer(textElement,text);
 
   body.appendChild(name);
+  body.appendChild(textElement);
 
-  if(imageData){
+  if(role==="assistant"){
 
-    const img =
-      document.createElement(
-        "img"
-      );
+    const actions=document.createElement("div");
 
-    img.className =
-      "message-image";
+    actions.className="actions";
 
-    img.src =
-      imageData;
+    const copy=document.createElement("button");
 
-    img.alt =
-      "Uploaded image";
+    copy.className="action";
+    copy.textContent="Copy";
 
-    body.appendChild(img);
-  }
-
-  body.appendChild(
-    textElement
-  );
-
-
-  if(role === "assistant"){
-
-    const actions =
-      document.createElement(
-        "div"
-      );
-
-    actions.className =
-      "actions";
-
-
-    const copy =
-      document.createElement(
-        "button"
-      );
-
-    copy.className =
-      "action";
-
-    copy.textContent =
-      "Copy";
-
-    copy.onclick =
-      () =>
-        copyText(
-          textElement.textContent
-        );
-
-
-    const regenerate =
-      document.createElement(
-        "button"
-      );
-
-    regenerate.className =
-      "action";
-
-    regenerate.textContent =
-      "Regenerate";
-
-    regenerate.onclick =
-      () => regenerateLast();
-
+    copy.onclick=()=>{
+      copyText(textElement.innerText);
+    };
 
     actions.appendChild(copy);
-
-    actions.appendChild(
-      regenerate
-    );
 
     body.appendChild(actions);
   }
 
-
   article.appendChild(avatar);
-
   article.appendChild(body);
 
   messages.appendChild(article);
 
   scrollBottom();
 
-
   return textElement;
 }
 
 
-/* =====================================================
-   SEND MESSAGE
-===================================================== */
+/* =================================================
+   ANSWER RENDERER
+================================================= */
+
+function renderAnswer(element,text){
+
+  element.innerHTML="";
+
+  if(!text){
+
+    return;
+  }
+
+  const parts=
+    text.split(/```([\s\S]*?)```/g);
+
+  parts.forEach((part,index)=>{
+
+    if(index%2===1){
+
+      const wrap=document.createElement("div");
+
+      wrap.className="code-wrap";
+
+      const head=document.createElement("div");
+
+      head.className="code-head";
+
+      const label=document.createElement("span");
+
+      label.textContent="Code";
+
+      const button=document.createElement("button");
+
+      button.className="code-copy";
+
+      button.textContent="Copy";
+
+      button.onclick=()=>{
+        copyText(part);
+      };
+
+      head.appendChild(label);
+      head.appendChild(button);
+
+      const code=document.createElement("pre");
+
+      code.className="code-content";
+
+      code.textContent=part.trim();
+
+      wrap.appendChild(head);
+      wrap.appendChild(code);
+
+      element.appendChild(wrap);
+
+    }else{
+
+      const normal=document.createElement("span");
+
+      normal.textContent=part;
+
+      element.appendChild(normal);
+
+    }
+
+  });
+}
+
+
+/* =================================================
+   SEND
+================================================= */
 
 async function sendMessage(){
 
@@ -1846,81 +1581,44 @@ async function sendMessage(){
     return;
   }
 
+  const text=input.value.trim();
 
-  const text =
-    input.value.trim();
-
-
-  if(
-    !text &&
-    !selectedImage &&
-    !selectedGenericFile
-  ){
+  if(!text){
     return;
   }
 
+  if(currentMode==="image"){
 
-  sending = true;
+    await generateImage(text);
 
-  send.style.display =
-    "none";
+    return;
+  }
 
-  stop.style.display =
-    "block";
-
+  sending=true;
+  send.disabled=true;
 
   if(!currentChat){
 
-    currentChat =
-      Date.now().toString();
+    currentChat=Date.now().toString();
 
     chats.unshift({
-
       id:currentChat,
-
-      title:
-        (
-          text ||
-          selectedFile?.name ||
-          "New conversation"
-        ).slice(0,60),
-
+      title:text.slice(0,55),
       messages:[],
-
-      updated:
-        Date.now()
-
+      updated:Date.now()
     });
   }
 
-
-  const imageForUI =
-    selectedImage
-      ? "data:" +
-        selectedImage.mimeType +
-        ";base64," +
-        selectedImage.data
-      : null;
-
-
-  createMessage(
-    "user",
-    text,
-    imageForUI
-  );
-
+  createMessage("user",text);
 
   conversation.push({
     role:"user",
     content:text
   });
 
-
-  const active =
-    chats.find(
-      c => c.id === currentChat
-    );
-
+  const active=chats.find(
+    c=>c.id===currentChat
+  );
 
   if(active){
 
@@ -1929,115 +1627,61 @@ async function sendMessage(){
       content:text
     });
 
-    active.updated =
-      Date.now();
-
-    saveChats();
+    active.updated=Date.now();
   }
 
-
-  input.value = "";
-
+  input.value="";
   resizeInput();
 
-
-  const assistantText =
+  const assistantText=
     createMessage(
       "assistant",
       ""
     );
 
-
   try{
 
-    const payload = {
-
-      message:
-        text ||
-        "Please analyze the uploaded content.",
-
-      history:
-        conversation.slice(-20),
-
-      model:
-        document.getElementById(
-          "modelSelect"
-        ).value ||
-        DEFAULT_MODEL
-
+    const payload={
+      message:text,
+      history:conversation.slice(-12),
+      model:selectedModel
     };
-
 
     if(selectedImage){
 
-      payload.image =
-        selectedImage;
+      payload.image=selectedImage;
     }
-
-
-    if(selectedGenericFile){
-
-      payload.file =
-        selectedGenericFile;
-    }
-
-
-    if(screenSnapshot){
-
-      payload.image =
-        screenSnapshot;
-
-      screenSnapshot =
-        null;
-    }
-
 
     removeFile();
 
-
-    abortController =
-      new AbortController();
-
-
-    const response =
+    const response=
       await fetch(
         API,
         {
           method:"POST",
-
           headers:{
             "Content-Type":
               "application/json"
           },
-
-          body:
-            JSON.stringify(
-              payload
-            ),
-
-          signal:
-            abortController.signal
+          body:JSON.stringify(payload)
         }
       );
 
-
     if(!response.ok){
 
-      const errorText =
+      const errorText=
         await response.text();
 
-      let errorMessage =
+      let errorMessage=
         "Request failed.";
 
       try{
 
-        const parsed =
-          JSON.parse(
-            errorText
-          );
+        const error=
+          JSON.parse(errorText);
 
-        errorMessage =
-          parsed.error ||
+        errorMessage=
+          error.error ||
           errorMessage;
 
       }catch{}
@@ -2047,7 +1691,6 @@ async function sendMessage(){
       );
     }
 
-
     if(!response.body){
 
       throw new Error(
@@ -2055,55 +1698,39 @@ async function sendMessage(){
       );
     }
 
-
-    const reader =
+    const reader=
       response.body.getReader();
 
-    const decoder =
+    const decoder=
       new TextDecoder();
 
-    let buffer = "";
-
-    let answer = "";
-
+    let buffer="";
+    let answer="";
 
     while(true){
 
-      const {
-        value,
-        done
-      } =
+      const {value,done}=
         await reader.read();
-
 
       if(done){
         break;
       }
 
-
-      buffer +=
+      buffer+=
         decoder.decode(
           value,
-          {
-            stream:true
-          }
+          {stream:true}
         );
 
-
-      const lines =
+      const lines=
         buffer.split("\n");
 
-      buffer =
+      buffer=
         lines.pop() || "";
 
+      for(const line of lines){
 
-      for(
-        const line of lines
-      ){
-
-        const trimmed =
-          line.trim();
-
+        const trimmed=line.trim();
 
         if(
           !trimmed ||
@@ -2112,108 +1739,69 @@ async function sendMessage(){
           continue;
         }
 
-
         if(
-          !trimmed.startsWith(
-            "data:"
-          )
+          !trimmed.startsWith("data:")
         ){
           continue;
         }
 
-
-        const raw =
+        const raw=
           trimmed
             .slice(5)
             .trim();
 
-
-        if(
-          raw === "[DONE]"
-        ){
+        if(raw==="[DONE]"){
           continue;
         }
 
-
         try{
 
-          const chunk =
+          const chunk=
             JSON.parse(raw);
 
-
-          if(chunk.error){
-
-            throw new Error(
-              chunk.error
-            );
-          }
-
-
-          const parts =
+          const parts=
             chunk
               ?.candidates?.[0]
               ?.content?.parts;
 
+          if(Array.isArray(parts)){
 
-          if(
-            Array.isArray(parts)
-          ){
-
-            for(
-              const part of parts
-            ){
+            for(const part of parts){
 
               if(
-                typeof part?.text ===
+                typeof part?.text===
                 "string"
               ){
 
-                answer +=
-                  part.text;
+                answer+=part.text;
 
-                assistantText.textContent =
-                  answer;
+                renderAnswer(
+                  assistantText,
+                  answer
+                );
 
                 scrollBottom();
               }
             }
           }
 
-        }catch(error){
+        }catch{
 
-          if(
-            error?.message &&
-            error.message !==
-            "Unexpected end of JSON input"
-          ){
-
-            if(
-              error.message
-                .toLowerCase()
-                .includes("api")
-            ){
-
-              throw error;
-            }
-          }
         }
       }
     }
 
-
     if(!answer.trim()){
 
       throw new Error(
-        "No response received from Gemini."
+        "No response received."
       );
     }
-
 
     conversation.push({
       role:"assistant",
       content:answer
     });
-
 
     if(active){
 
@@ -2222,1155 +1810,511 @@ async function sendMessage(){
         content:answer
       });
 
-      active.updated =
-        Date.now();
-
-      saveChats();
-      renderHistory();
+      active.updated=Date.now();
     }
 
+    saveChats();
+    renderHistory();
 
   }catch(error){
 
-    if(
-      error?.name ===
-      "AbortError"
-    ){
-
-      assistantText.textContent =
-        "Generation stopped.";
-
-    }else{
-
-      assistantText.textContent =
-        "Sorry, something went wrong.\n\n" +
-        (
-          error?.message ||
-          "Unknown error."
-        );
-    }
+    renderAnswer(
+      assistantText,
+      "Sorry, something went wrong.\n\n"+
+      error.message
+    );
 
   }finally{
 
-    sending = false;
-
-    abortController = null;
-
-    send.style.display =
-      "block";
-
-    stop.style.display =
-      "none";
-
+    sending=false;
+    send.disabled=false;
     input.focus();
+
   }
 }
 
 
-/* =====================================================
-   STOP GENERATION
-===================================================== */
+/* =================================================
+   IMAGE GENERATION
+================================================= */
 
-function stopGeneration(){
-
-  if(abortController){
-
-    abortController.abort();
-
-    toast(
-      "Generation stopped"
-    );
-  }
-}
-
-
-/* =====================================================
-   REGENERATE
-===================================================== */
-
-function regenerateLast(){
+async function generateImage(prompt){
 
   if(sending){
     return;
   }
 
+  sending=true;
+  send.disabled=true;
 
-  if(
-    conversation.length < 2
-  ){
-    return;
+  createMessage(
+    "user",
+    "🎨 "+prompt
+  );
+
+  const assistant=
+    createMessage(
+      "assistant",
+      "Creating your image..."
+    );
+
+  try{
+
+    const response=
+      await fetch(
+        IMAGE_API,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify({
+            prompt,
+            model:selectedModel
+          })
+        }
+      );
+
+    const data=
+      await response.json();
+
+    if(!response.ok){
+
+      throw new Error(
+        data?.error ||
+        "Image generation is not configured yet."
+      );
+    }
+
+    if(data.imageUrl){
+
+      assistant.innerHTML="";
+
+      const img=
+        document.createElement("img");
+
+      img.src=data.imageUrl;
+
+      img.alt=prompt;
+
+      img.style.maxWidth="100%";
+      img.style.borderRadius="16px";
+      img.style.display="block";
+
+      assistant.appendChild(img);
+
+    }else{
+
+      throw new Error(
+        "Image generator returned no image."
+      );
+    }
+
+  }catch(error){
+
+    renderAnswer(
+      assistant,
+      "Image generation is not connected yet.\n\n"+
+      error.message
+    );
+
+  }finally{
+
+    sending=false;
+    send.disabled=false;
   }
-
-
-  const last =
-    conversation[
-      conversation.length - 1
-    ];
-
-
-  if(
-    last.role === "assistant"
-  ){
-
-    conversation.pop();
-
-  }
-
-
-  const previous =
-    conversation[
-      conversation.length - 1
-    ];
-
-
-  if(
-    previous?.role !== "user"
-  ){
-    return;
-  }
-
-
-  input.value =
-    previous.content;
-
-  sendMessage();
 }
 
 
-/* =====================================================
-   FILE UPLOAD
-===================================================== */
+/* =================================================
+   FILES / IMAGES
+================================================= */
 
-document
-  .getElementById("file")
-  .addEventListener(
-    "change",
-    fileSelected
-  );
+function fileSelected(inputElement){
 
-
-async function fileSelected(event){
-
-  const file =
-    event.target.files?.[0];
-
+  const file=
+    inputElement.files?.[0];
 
   if(!file){
     return;
   }
 
+  selectedFile=file;
 
-  selectedFile =
-    file;
-
-
-  document
-    .getElementById(
-      "attachmentName"
-    )
-    .textContent =
-      "📎 " +
-      file.name;
-
-
-  document
-    .getElementById(
+  const preview=
+    document.getElementById(
       "attachmentPreview"
-    )
-    .classList.add(
-      "show"
     );
 
+  const name=
+    document.getElementById(
+      "attachmentName"
+    );
 
-  if(
-    file.type.startsWith(
-      "image/"
-    )
-  ){
+  const thumb=
+    document.getElementById(
+      "previewThumb"
+    );
 
-    const base64 =
-      await fileToBase64(
-        file
-      );
+  name.textContent=
+    "📎 "+file.name;
 
-    selectedImage = {
+  preview.classList.add("show");
 
-      mimeType:
-        file.type,
+  if(file.type.startsWith("image/")){
 
-      data:
-        stripDataPrefix(
-          base64
-        )
+    thumb.style.display="block";
+
+    const reader=
+      new FileReader();
+
+    reader.onload=()=>{
+
+      const result=
+        String(reader.result);
+
+      thumb.src=result;
+
+      const comma=
+        result.indexOf(",");
+
+      selectedImage={
+        mimeType:file.type,
+        data:
+          comma>=0
+            ? result.slice(comma+1)
+            : result
+      };
     };
 
-    selectedGenericFile =
-      null;
+    reader.readAsDataURL(file);
 
-    return;
-  }
+  }else{
 
+    thumb.style.display="none";
+    selectedImage=null;
 
-  const base64 =
-    await fileToBase64(
-      file
+    toast(
+      "File attached. PDF/DOCX processing requires the Worker file-processing endpoint."
     );
-
-
-  selectedImage =
-    null;
-
-
-  selectedGenericFile = {
-
-    name:
-      file.name,
-
-    mimeType:
-      file.type ||
-      getMimeFromName(
-        file.name
-      ),
-
-    data:
-      stripDataPrefix(
-        base64
-      )
-  };
-
-
-  toast(
-    file.name +
-    " attached"
-  );
+  }
 }
-
-
-function fileToBase64(file){
-
-  return new Promise(
-    (resolve,reject)=>{
-
-      const reader =
-        new FileReader();
-
-      reader.onload =
-        () =>
-          resolve(
-            String(
-              reader.result
-            )
-          );
-
-      reader.onerror =
-        reject;
-
-      reader.readAsDataURL(
-        file
-      );
-    }
-  );
-}
-
-
-function stripDataPrefix(
-  data
-){
-
-  const comma =
-    data.indexOf(",");
-
-  return comma >= 0
-    ? data.slice(
-        comma + 1
-      )
-    : data;
-}
-
-
-function getMimeFromName(
-  name
-){
-
-  const ext =
-    name
-      .toLowerCase()
-      .split(".")
-      .pop();
-
-
-  const map = {
-
-    txt:"text/plain",
-
-    csv:"text/csv",
-
-    json:"application/json",
-
-    html:"text/html",
-
-    htm:"text/html",
-
-    css:"text/css",
-
-    js:"application/javascript",
-
-    pdf:"application/pdf",
-
-    docx:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  };
-
-
-  return map[ext] ||
-    "application/octet-stream";
-}
-
 
 function removeFile(){
 
-  selectedFile = null;
+  selectedFile=null;
+  selectedImage=null;
 
-  selectedImage = null;
+  const file=
+    document.getElementById("file");
 
-  selectedGenericFile = null;
-
-
-  const file =
-    document.getElementById(
-      "file"
-    );
-
-  file.value = "";
-
+  file.value="";
 
   document
     .getElementById(
       "attachmentPreview"
     )
-    .classList.remove(
-      "show"
-    );
+    .classList.remove("show");
+
+  document
+    .getElementById(
+      "previewThumb"
+    ).style.display="none";
 }
 
 
-/* =====================================================
+/* =================================================
    VOICE
-===================================================== */
+================================================= */
 
 function startVoice(){
 
-  const Recognition =
+  const Recognition=
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
-
 
   if(!Recognition){
 
     toast(
-      "Voice input is not supported in this browser."
+      "Voice input isn't supported here."
     );
 
     return;
   }
 
-
-  const recognition =
+  const recognition=
     new Recognition();
 
+  recognition.lang="en-IN";
+  recognition.interimResults=false;
+  recognition.continuous=false;
 
-  recognition.lang =
-    "en-IN";
+  recognition.onstart=()=>{
+    toast("Listening...");
+  };
 
-  recognition.interimResults =
-    true;
+  recognition.onresult=event=>{
 
-  recognition.continuous =
-    false;
+    const text=
+      event
+        .results?.[0]?.[0]
+        ?.transcript;
 
+    if(text){
 
-  recognition.onstart =
-    () =>
-      toast(
-        "Listening..."
-      );
-
-
-  recognition.onresult =
-    event => {
-
-      let text = "";
-
-      for(
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ){
-
-        text +=
-          event.results[i][0]
-            .transcript;
-      }
-
-
-      input.value =
+      input.value+=
+        (input.value ? " " : "")+
         text;
 
       resizeInput();
-    };
-
-
-  recognition.onerror =
-    () =>
-      toast(
-        "Voice input failed."
-      );
-
-
-  recognition.onend =
-    () =>
-      resizeInput();
-
-
-  try{
-
-    recognition.start();
-
-  }catch{
-
-    toast(
-      "Voice input could not start."
-    );
-  }
-}
-
-
-/* =====================================================
-   SCREEN SHARING
-===================================================== */
-
-async function toggleScreen(){
-
-  if(screenStream){
-
-    stopScreen();
-
-    return;
-  }
-
-
-  if(
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices
-      .getDisplayMedia
-  ){
-
-    toast(
-      "Screen sharing is not supported here."
-    );
-
-    return;
-  }
-
-
-  try{
-
-    screenStream =
-      await navigator
-        .mediaDevices
-        .getDisplayMedia({
-          video:true,
-          audio:false
-        });
-
-
-    const video =
-      document.getElementById(
-        "screenVideo"
-      );
-
-    video.srcObject =
-      screenStream;
-
-
-    document
-      .getElementById(
-        "screenPanel"
-      )
-      .classList.add(
-        "show"
-      );
-
-
-    const track =
-      screenStream
-        .getVideoTracks()[0];
-
-
-    if(track){
-
-      track.onended =
-        () =>
-          stopScreen();
     }
-
-
-    toast(
-      "Live screen sharing started"
-    );
-
-  }catch(error){
-
-    toast(
-      "Screen sharing cancelled."
-    );
-  }
-}
-
-
-function stopScreen(){
-
-  if(screenStream){
-
-    screenStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-  }
-
-
-  screenStream = null;
-
-
-  const video =
-    document.getElementById(
-      "screenVideo"
-    );
-
-
-  video.srcObject =
-    null;
-
-
-  document
-    .getElementById(
-      "screenPanel"
-    )
-    .classList.remove(
-      "show"
-    );
-}
-
-
-async function captureScreen(){
-
-  if(!screenStream){
-
-    toast(
-      "Start screen sharing first."
-    );
-
-    return;
-  }
-
-
-  const video =
-    document.getElementById(
-      "screenVideo"
-    );
-
-
-  if(
-    !video.videoWidth ||
-    !video.videoHeight
-  ){
-
-    toast(
-      "Screen is not ready yet."
-    );
-
-    return;
-  }
-
-
-  const canvas =
-    document.createElement(
-      "canvas"
-    );
-
-
-  canvas.width =
-    video.videoWidth;
-
-  canvas.height =
-    video.videoHeight;
-
-
-  const ctx =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  ctx.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  const dataURL =
-    canvas.toDataURL(
-      "image/jpeg",
-      .82
-    );
-
-
-  screenSnapshot = {
-
-    mimeType:
-      "image/jpeg",
-
-    data:
-      stripDataPrefix(
-        dataURL
-      )
   };
 
+  recognition.onerror=()=>{
+    toast("Voice input failed.");
+  };
 
-  stopScreen();
-
-
-  input.value =
-    input.value ||
-    "Analyze this screen and explain what you see.";
-
-
-  resizeInput();
-
-  input.focus();
-
-
-  toast(
-    "Screen snapshot attached. Send it to Nexora."
-  );
+  recognition.start();
 }
 
 
-/* =====================================================
-   CODE LAB
-===================================================== */
-
-function openCodeEditor(){
-
-  document
-    .getElementById(
-      "codePanel"
-    )
-    .classList.add(
-      "show"
-    );
-
-  document
-    .getElementById(
-      "codeEditor"
-    )
-    .focus();
-}
-
-
-function closeCodeEditor(){
-
-  document
-    .getElementById(
-      "codePanel"
-    )
-    .classList.remove(
-      "show"
-    );
-}
-
-
-function runCode(){
-
-  const code =
-    document
-      .getElementById(
-        "codeEditor"
-      )
-      .value;
-
-
-  const preview =
-    document
-      .getElementById(
-        "codePreview"
-      );
-
-
-  preview.srcdoc =
-    code;
-
-
-  showPreview();
-}
-
-
-function showCode(){
-
-  document
-    .getElementById(
-      "codeEditor"
-    )
-    .classList.remove(
-      "hide"
-    );
-
-  document
-    .getElementById(
-      "codePreview"
-    )
-    .classList.remove(
-      "show"
-    );
-}
-
-
-function showPreview(){
-
-  document
-    .getElementById(
-      "codeEditor"
-    )
-    .classList.add(
-      "hide"
-    );
-
-  document
-    .getElementById(
-      "codePreview"
-    )
-    .classList.add(
-      "show"
-    );
-}
-
-
-async function copyCode(){
-
-  const code =
-    document
-      .getElementById(
-        "codeEditor"
-      )
-      .value;
-
-
-  await copyText(
-    code
-  );
-}
-
-
-/* =====================================================
+/* =================================================
    HISTORY
-===================================================== */
+================================================= */
 
 function renderHistory(){
 
-  historyBox.innerHTML = "";
+  historyBox.innerHTML="";
 
-
-  const query =
+  const query=
     document
-      .getElementById(
-        "search"
-      )
+      .getElementById("search")
       .value
       .trim()
       .toLowerCase();
 
-
   chats
-    .filter(chat =>
+    .filter(chat=>
       !query ||
-      String(chat.title)
+      chat.title
         .toLowerCase()
         .includes(query)
     )
-    .sort(
-      (a,b) =>
-        (b.updated || 0) -
-        (a.updated || 0)
-    )
-    .forEach(chat => {
+    .forEach(chat=>{
 
-      const row =
-        document.createElement(
-          "div"
-        );
+      const row=
+        document.createElement("div");
 
-      row.className =
-        "chat-row";
+      row.className="chat-row";
 
+      if(chat.id===currentChat){
 
-      if(
-        chat.id ===
-        currentChat
-      ){
-
-        row.classList.add(
-          "active"
-        );
+        row.classList.add("active");
       }
 
+      const icon=
+        document.createElement("span");
 
-      const icon =
-        document.createElement(
-          "span"
-        );
+      icon.textContent="💬";
 
-      icon.textContent =
-        "💬";
+      const title=
+        document.createElement("span");
 
+      title.className="chat-title";
+      title.textContent=chat.title;
 
-      const title =
-        document.createElement(
-          "span"
-        );
+      const menu=
+        document.createElement("button");
 
-      title.className =
-        "chat-title";
+      menu.className="chat-menu";
+      menu.textContent="•••";
 
-      title.textContent =
-        chat.title;
+      menu.onclick=event=>{
 
+        event.stopPropagation();
 
-      const menu =
-        document.createElement(
-          "button"
-        );
+        chatActions(chat.id);
+      };
 
-      menu.className =
-        "chat-menu";
-
-      menu.textContent =
-        "•••";
-
-
-      menu.onclick =
-        event => {
-
-          event.stopPropagation();
-
-          chatActions(
-            chat.id
-          );
-        };
-
-
-      row.onclick =
-        () =>
-          openChat(
-            chat.id
-          );
-
+      row.onclick=()=>
+        openChat(chat.id);
 
       row.appendChild(icon);
-
       row.appendChild(title);
-
       row.appendChild(menu);
 
-      historyBox.appendChild(
-        row
-      );
+      historyBox.appendChild(row);
     });
 }
 
 
-document
-  .getElementById(
-    "search"
-  )
-  .addEventListener(
-    "input",
-    renderHistory
-  );
-
-
-/* =====================================================
+/* =================================================
    OPEN CHAT
-===================================================== */
+================================================= */
 
 function openChat(id){
 
-  const chat =
-    chats.find(
-      c => c.id === id
-    );
-
+  const chat=
+    chats.find(c=>c.id===id);
 
   if(!chat){
     return;
   }
 
+  currentChat=id;
 
-  currentChat =
-    id;
+  conversation=
+    chat.messages.map(m=>({
+      role:m.role,
+      content:m.content
+    }));
 
+  messages.innerHTML="";
+  welcome.style.display="none";
+  messages.style.display="block";
 
-  conversation =
-    Array.isArray(chat.messages)
-      ? chat.messages.map(
-          m => ({
-            role:m.role,
-            content:m.content
-          })
-        )
-      : [];
-
-
-  messages.innerHTML = "";
-
-  welcome.style.display =
-    "none";
-
-  messages.style.display =
-    "block";
-
-
-  chat.messages.forEach(
-    message =>
-      createMessage(
-        message.role,
-        message.content
-      )
-  );
-
+  chat.messages.forEach(m=>{
+    createMessage(
+      m.role,
+      m.content
+    );
+  });
 
   renderHistory();
-
   closeSidebar();
-
-  scrollBottom();
 }
 
 
-/* =====================================================
+/* =================================================
    CHAT ACTIONS
-===================================================== */
+================================================= */
 
 function chatActions(id){
 
-  const chat =
-    chats.find(
-      c => c.id === id
-    );
-
+  const chat=
+    chats.find(c=>c.id===id);
 
   if(!chat){
     return;
   }
 
-
-  const choice =
+  const choice=
     prompt(
       "Type:\nrename = Rename chat\ndelete = Delete chat"
     );
 
-
   if(
-    choice?.toLowerCase() ===
-    "rename"
+    choice?.toLowerCase()==="rename"
   ){
 
-    const title =
+    const title=
       prompt(
         "New chat name:",
         chat.title
       );
 
-
     if(title?.trim()){
 
-      chat.title =
-        title.trim();
-
-      chat.updated =
-        Date.now();
+      chat.title=title.trim();
 
       saveChats();
-
       renderHistory();
     }
   }
 
-
   if(
-    choice?.toLowerCase() ===
-    "delete"
+    choice?.toLowerCase()==="delete"
   ){
 
-    chats =
+    chats=
       chats.filter(
-        c => c.id !== id
+        c=>c.id!==id
       );
-
 
     saveChats();
 
-
-    if(
-      currentChat === id
-    ){
-
+    if(currentChat===id){
       newChat();
     }
-
 
     renderHistory();
   }
 }
 
 
-/* =====================================================
+/* =================================================
    COPY
-===================================================== */
+================================================= */
 
 async function copyText(text){
 
   try{
 
-    await navigator
-      .clipboard
-      .writeText(
-        text
-      );
+    await navigator.clipboard.writeText(text);
 
-    toast(
-      "Copied"
-    );
+    toast("Copied");
 
   }catch{
 
-    toast(
-      "Copy failed"
-    );
+    toast("Copy failed");
   }
 }
 
 
-/* =====================================================
+/* =================================================
    SETTINGS
-===================================================== */
+================================================= */
 
 function openSettings(){
 
   document
-    .getElementById(
-      "settingsModal"
-    )
-    .classList.add(
-      "show"
-    );
+    .getElementById("settingsModal")
+    .classList.add("show");
 }
-
 
 function closeSettings(event){
 
   if(
     event &&
-    event.target !==
-    event.currentTarget
+    event.target!==event.currentTarget
   ){
-
     return;
   }
 
-
   document
-    .getElementById(
-      "settingsModal"
-    )
-    .classList.remove(
-      "show"
-    );
+    .getElementById("settingsModal")
+    .classList.remove("show");
 }
 
+function changeModel(){
 
-document
-  .getElementById(
-    "modelSelect"
-  )
-  .addEventListener(
-    "change",
-    event => {
+  selectedModel=
+    document.getElementById(
+      "modelSelect"
+    ).value;
 
-      const model =
-        event.target.value;
+  document.getElementById(
+    "headerModel"
+  ).textContent=
+    selectedModel
+      .replace("gemini-","Gemini ")
+      .replace("-"," ");
 
-
-      document
-        .getElementById(
-          "headerModel"
-        )
-        .textContent =
-          model
-            .replace(
-              "gemini-",
-              "Gemini "
-            );
-
-      localStorage.setItem(
-        "nexora_model",
-        model
-      );
-
-      toast(
-        "Model selected"
-      );
-    }
+  localStorage.setItem(
+    "nexora_model",
+    selectedModel
   );
 
-
-function loadModel(){
-
-  const saved =
-    localStorage.getItem(
-      "nexora_model"
-    ) ||
-    DEFAULT_MODEL;
-
-
-  document
-    .getElementById(
-      "modelSelect"
-    )
-    .value =
-      saved;
-
-
-  document
-    .getElementById(
-      "headerModel"
-    )
-    .textContent =
-      saved
-        .replace(
-          "gemini-",
-          "Gemini "
-        );
+  toast(
+    "Model selected"
+  );
 }
 
 
-/* =====================================================
+/* =================================================
    CLEAR HISTORY
-===================================================== */
+================================================= */
 
 function clearHistory(){
 
@@ -3382,8 +2326,7 @@ function clearHistory(){
     return;
   }
 
-
-  chats = [];
+  chats=[];
 
   saveChats();
 
@@ -3397,58 +2340,42 @@ function clearHistory(){
 }
 
 
-/* =====================================================
-   MOBILE SIDEBAR
-===================================================== */
+/* =================================================
+   MOBILE
+================================================= */
 
 function openSidebar(){
 
   document
-    .getElementById(
-      "sidebar"
-    )
-    .classList.add(
-      "open"
-    );
+    .getElementById("sidebar")
+    .classList.add("open");
 
   document
-    .getElementById(
-      "overlay"
-    )
-    .classList.add(
-      "open"
-    );
+    .getElementById("overlay")
+    .classList.add("open");
 }
-
 
 function closeSidebar(){
 
   document
-    .getElementById(
-      "sidebar"
-    )
-    .classList.remove(
-      "open"
-    );
+    .getElementById("sidebar")
+    .classList.remove("open");
 
   document
-    .getElementById(
-      "overlay"
-    )
-    .classList.remove(
-      "open"
-    );
+    .getElementById("overlay")
+    .classList.remove("open");
 }
 
 
-/* =====================================================
-   SUGGESTIONS
-===================================================== */
+/* =================================================
+   SUGGESTION
+================================================= */
 
 function suggest(text){
 
-  input.value =
-    text;
+  setMode("chat");
+
+  input.value=text;
 
   resizeInput();
 
@@ -3456,35 +2383,32 @@ function suggest(text){
 }
 
 
-/* =====================================================
+/* =================================================
    TEXTAREA
-===================================================== */
+================================================= */
 
 function resizeInput(){
 
-  input.style.height =
-    "auto";
+  input.style.height="auto";
 
-  input.style.height =
+  input.style.height=
     Math.min(
       input.scrollHeight,
-      180
-    ) + "px";
+      170
+    )+"px";
 }
-
 
 input.addEventListener(
   "input",
   resizeInput
 );
 
-
 input.addEventListener(
   "keydown",
-  event => {
+  event=>{
 
     if(
-      event.key === "Enter" &&
+      event.key==="Enter" &&
       !event.shiftKey
     ){
 
@@ -3496,17 +2420,15 @@ input.addEventListener(
 );
 
 
-/* =====================================================
+/* =================================================
    FORM
-===================================================== */
+================================================= */
 
 document
-  .getElementById(
-    "composer"
-  )
+  .getElementById("composer")
   .addEventListener(
     "submit",
-    event => {
+    event=>{
 
       event.preventDefault();
 
@@ -3515,160 +2437,66 @@ document
   );
 
 
-/* =====================================================
-   KEYBOARD SHORTCUTS
-===================================================== */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if(
-      (event.ctrlKey ||
-       event.metaKey) &&
-      event.key.toLowerCase() ===
-      "k"
-    ){
-
-      event.preventDefault();
-
-      document
-        .getElementById(
-          "search"
-        )
-        .focus();
-    }
-
-
-    if(
-      (event.ctrlKey ||
-       event.metaKey) &&
-      event.key.toLowerCase() ===
-      "n"
-    ){
-
-      event.preventDefault();
-
-      newChat();
-    }
-
-
-    if(
-      event.key === "Escape"
-    ){
-
-      closeSettings();
-
-      closeCodeEditor();
-
-      stopScreen();
-    }
-  }
-);
-
-
-function showShortcuts(){
-
-  alert(
-    "Keyboard Shortcuts\n\n" +
-    "Enter — Send message\n" +
-    "Shift + Enter — New line\n" +
-    "Ctrl/Cmd + K — Search chats\n" +
-    "Ctrl/Cmd + N — New chat\n" +
-    "Esc — Close panels"
-  );
-}
-
-
-/* =====================================================
+/* =================================================
    SCROLL
-===================================================== */
+================================================= */
 
 function scrollBottom(){
 
-  chatArea.scrollTop =
+  chatArea.scrollTop=
     chatArea.scrollHeight;
 }
 
 
-/* =====================================================
+/* =================================================
    TOAST
-===================================================== */
+================================================= */
 
 let toastTimer;
 
-
 function toast(text){
 
-  const element =
-    document.getElementById(
-      "toast"
-    );
+  const element=
+    document.getElementById("toast");
 
+  element.textContent=text;
 
-  element.textContent =
-    text;
+  element.classList.add("show");
 
+  clearTimeout(toastTimer);
 
-  element.classList.add(
-    "show"
-  );
-
-
-  clearTimeout(
-    toastTimer
-  );
-
-
-  toastTimer =
+  toastTimer=
     setTimeout(
-      () => {
-
-        element.classList.remove(
-          "show"
-        );
-
+      ()=>{
+        element.classList.remove("show");
       },
-      2200
+      2300
     );
 }
 
 
-/* =====================================================
-   SYSTEM THEME CHANGE
-===================================================== */
-
-window
-  .matchMedia(
-    "(prefers-color-scheme: dark)"
-  )
-  .addEventListener(
-    "change",
-    () => {
-
-      if(
-        localStorage.getItem(
-          "nexora_theme"
-        ) === "system"
-      ){
-
-        setTheme(
-          "system"
-        );
-      }
-    }
-  );
-
-
-/* =====================================================
+/* =================================================
    INIT
-===================================================== */
+================================================= */
 
 loadTheme();
-
 loadChats();
 
-loadModel();
+selectedModel=
+  localStorage.getItem(
+    "nexora_model"
+  ) || DEFAULT_MODEL;
+
+document.getElementById(
+  "modelSelect"
+).value=selectedModel;
+
+document.getElementById(
+  "headerModel"
+).textContent=
+  selectedModel
+    .replace("gemini-","Gemini ")
+    .replace("-"," ");
 
 newChat();
 
