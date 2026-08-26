@@ -1,158 +1,107 @@
 const MODEL = "gemini-3.6-flash";
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Cache-Control": "no-store"
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Cache-Control": "no-store"
-    };
-
-    // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders
+        headers: CORS
       });
     }
 
     try {
-      // =========================================
-      // HEALTH CHECK
-      // =========================================
-
+      // -----------------------------
+      // HEALTH
+      // -----------------------------
       if (url.pathname === "/api/health") {
-        return json(
-          {
-            success: true,
-            service: "Nexora AI",
-            worker: "online",
-            model: MODEL,
-            geminiKey: Boolean(env.GEMINI_API_KEY)
-          },
-          200,
-          corsHeaders
-        );
+        return json({
+          success: true,
+          service: "Nexora AI",
+          worker: "online",
+          model: MODEL,
+          geminiKey: Boolean(env.GEMINI_API_KEY),
+          streaming: true,
+          vision: true,
+          files: true
+        });
       }
 
-      // =========================================
-      // CHAT API
-      // =========================================
-
+      // -----------------------------
+      // CHAT
+      // -----------------------------
       if (
         url.pathname === "/api/chat" &&
         request.method === "POST"
       ) {
-        return await handleChat(
-          request,
-          env,
-          corsHeaders
-        );
+        return chat(request, env);
       }
 
-      // =========================================
+      // -----------------------------
       // WEBSITE
-      // =========================================
-
-      // Everything that is not an API endpoint
-      // is served by the Cloudflare Assets binding.
+      // -----------------------------
       if (env.ASSETS) {
-        const assetResponse =
-          await env.ASSETS.fetch(request);
+        const asset = await env.ASSETS.fetch(request);
 
-        if (assetResponse.status !== 404) {
-          return assetResponse;
+        if (asset.status !== 404) {
+          return asset;
         }
 
-        // SPA fallback:
-        // If a normal page is requested, serve index.html.
-        const indexRequest =
+        const fallback = await env.ASSETS.fetch(
           new Request(
             new URL("/index.html", request.url),
             request
-          );
+          )
+        );
 
-        const indexResponse =
-          await env.ASSETS.fetch(indexRequest);
-
-        if (indexResponse.status !== 404) {
-          return indexResponse;
+        if (fallback.status !== 404) {
+          return fallback;
         }
       }
 
-      // =========================================
-      // ROOT FALLBACK
-      // =========================================
-
       if (url.pathname === "/") {
-        return json(
-          {
-            success: true,
-            service: "Nexora AI",
-            status: "online",
-            model: MODEL,
-            message:
-              "Nexora AI Worker is running, but index.html was not found."
-          },
-          200,
-          corsHeaders
-        );
+        return json({
+          success: true,
+          service: "Nexora AI",
+          status: "online",
+          model: MODEL
+        });
       }
 
-      // =========================================
-      // 404
-      // =========================================
-
-      return json(
-        {
-          success: false,
-          error: "Endpoint not found"
-        },
-        404,
-        corsHeaders
-      );
+      return json({
+        success: false,
+        error: "Endpoint not found"
+      }, 404);
 
     } catch (error) {
-
-      return json(
-        {
-          success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : String(error)
-        },
-        500,
-        corsHeaders
-      );
+      return json({
+        success: false,
+        error: error?.message || String(error)
+      }, 500);
     }
   }
 };
 
 
 // =================================================
-// CHAT HANDLER
+// CHAT
 // =================================================
 
-async function handleChat(
-  request,
-  env,
-  headers
-) {
+async function chat(request, env) {
 
   if (!env.GEMINI_API_KEY) {
-    return json(
-      {
-        success: false,
-        error:
-          "GEMINI_API_KEY is not configured in Cloudflare."
-      },
-      500,
-      headers
-    );
+    return json({
+      success: false,
+      error: "GEMINI_API_KEY is not configured."
+    }, 500);
   }
 
   let body;
@@ -160,87 +109,127 @@ async function handleChat(
   try {
     body = await request.json();
   } catch {
-    return json(
-      {
-        success: false,
-        error: "Invalid JSON request body."
-      },
-      400,
-      headers
-    );
+    return json({
+      success: false,
+      error: "Invalid JSON request."
+    }, 400);
   }
 
   const message =
     String(body?.message || "").trim();
 
   if (!message) {
-    return json(
-      {
-        success: false,
-        error: "Message is empty."
-      },
-      400,
-      headers
-    );
+    return json({
+      success: false,
+      error: "Message is empty."
+    }, 400);
   }
 
-  // Optional conversation history
-  const history =
-    Array.isArray(body?.history)
-      ? body.history
-      : [];
+  // ---------------------------------------------
+  // Conversation history
+  // ---------------------------------------------
 
   const contents = [];
 
-  // Keep only recent messages
-  const recentHistory =
-    history.slice(-12);
+  if (Array.isArray(body?.history)) {
 
-  for (const item of recentHistory) {
+    for (
+      const item of body.history.slice(-12)
+    ) {
 
-    if (!item) continue;
+      const text =
+        String(item?.content || "").trim();
 
-    const role =
-      item.role === "assistant"
-        ? "model"
-        : "user";
+      if (!text) continue;
 
-    const text =
-      String(item.content || "").trim();
+      contents.push({
+        role:
+          item.role === "assistant"
+            ? "model"
+            : "user",
 
-    if (!text) continue;
-
-    contents.push({
-      role,
-      parts: [
-        {
-          text
-        }
-      ]
-    });
+        parts: [
+          {
+            text
+          }
+        ]
+      });
+    }
   }
 
-  // Add current message
+  // ---------------------------------------------
+  // Current message
+  // ---------------------------------------------
+
+  const parts = [
+    {
+      text: message
+    }
+  ];
+
+
+  // ---------------------------------------------
+  // Image support
+  //
+  // Frontend can send:
+  //
+  // {
+  //   image: {
+  //     mimeType: "image/jpeg",
+  //     data: "BASE64..."
+  //   }
+  // }
+  // ---------------------------------------------
+
+  if (
+    body?.image?.data &&
+    body?.image?.mimeType
+  ) {
+
+    const mimeType =
+      String(
+        body.image.mimeType
+      );
+
+    const data =
+      String(
+        body.image.data
+      );
+
+    if (
+      mimeType.startsWith("image/")
+    ) {
+
+      parts.push({
+        inlineData: {
+          mimeType,
+          data
+        }
+      });
+
+    }
+
+  }
+
+
   contents.push({
     role: "user",
-    parts: [
-      {
-        text: message
-      }
-    ]
+    parts
   });
 
 
-  // =========================================
-  // GEMINI REQUEST
-  // =========================================
+  // ---------------------------------------------
+  // Gemini API
+  // ---------------------------------------------
 
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
     "v1beta/models/" +
     encodeURIComponent(MODEL) +
-    ":generateContent?key=" +
-    encodeURIComponent(env.GEMINI_API_KEY);
+    ":streamGenerateContent?alt=sse&key=" +
+    encodeURIComponent(
+      env.GEMINI_API_KEY
+    );
 
 
   const geminiResponse =
@@ -255,13 +244,14 @@ async function handleChat(
         },
 
         body: JSON.stringify({
+
           systemInstruction: {
             parts: [
               {
                 text:
-                  "You are Nexora AI, a helpful, " +
-                  "clear and friendly AI assistant. " +
-                  "Answer accurately and naturally. " +
+                  "You are Nexora AI. " +
+                  "Be helpful, accurate, clear, " +
+                  "and friendly. " +
                   "Use Markdown when useful."
               }
             ]
@@ -273,113 +263,125 @@ async function handleChat(
             temperature: 0.7,
             maxOutputTokens: 4096
           }
+
         })
       }
     );
 
 
-  let data;
-
-  try {
-    data =
-      await geminiResponse.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        error:
-          "Gemini returned an invalid response."
-      },
-      502,
-      headers
-    );
-  }
-
-
-  // =========================================
-  // GEMINI ERROR
-  // =========================================
-
   if (!geminiResponse.ok) {
 
-    return json(
-      {
-        success: false,
-        error:
-          data?.error?.message ||
-          "Gemini API request failed.",
-        model: MODEL
-      },
-      geminiResponse.status,
-      headers
-    );
-  }
+    const errorText =
+      await geminiResponse.text();
 
+    let errorMessage =
+      "Gemini API request failed.";
 
-  // =========================================
-  // EXTRACT ANSWER
-  // =========================================
+    try {
 
-  const candidates =
-    Array.isArray(data?.candidates)
-      ? data.candidates
-      : [];
+      const errorJSON =
+        JSON.parse(errorText);
 
-  const answer =
-    candidates?.[0]?.content?.parts
-      ?.map(part =>
-        typeof part?.text === "string"
-          ? part.text
-          : ""
-      )
-      .join("")
-      .trim();
+      errorMessage =
+        errorJSON?.error?.message ||
+        errorMessage;
 
+    } catch {}
 
-  if (!answer) {
-
-    const finishReason =
-      candidates?.[0]?.finishReason;
-
-    return json(
-      {
-        success: false,
-        error:
-          finishReason
-            ? `No answer generated. Finish reason: ${finishReason}`
-            : "No response received from Gemini.",
-        model: MODEL
-      },
-      502,
-      headers
-    );
-  }
-
-
-  // =========================================
-  // SUCCESS
-  // =========================================
-
-  return json(
-    {
-      success: true,
-      answer,
+    return json({
+      success: false,
+      error: errorMessage,
       model: MODEL
-    },
-    200,
-    headers
+    }, geminiResponse.status);
+  }
+
+
+  // ---------------------------------------------
+  // STREAM TO BROWSER
+  // ---------------------------------------------
+
+  const encoder =
+    new TextEncoder();
+
+  const decoder =
+    new TextDecoder();
+
+  const reader =
+    geminiResponse.body.getReader();
+
+
+  const stream =
+    new ReadableStream({
+
+      async start(controller) {
+
+        try {
+
+          while (true) {
+
+            const {
+              value,
+              done
+            } = await reader.read();
+
+            if (done) break;
+
+            const chunk =
+              decoder.decode(
+                value,
+                { stream: true }
+              );
+
+            controller.enqueue(
+              encoder.encode(chunk)
+            );
+          }
+
+        } catch (error) {
+
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                error:
+                  error?.message ||
+                  "Streaming error"
+              })
+            )
+          );
+
+        } finally {
+
+          controller.close();
+
+        }
+
+      }
+
+    });
+
+
+  return new Response(
+    stream,
+    {
+      status: 200,
+      headers: {
+        ...CORS,
+        "Content-Type":
+          "text/event-stream; charset=utf-8",
+        "X-Accel-Buffering": "no"
+      }
+    }
   );
 }
 
 
 // =================================================
-// JSON RESPONSE HELPER
+// JSON
 // =================================================
 
 function json(
   data,
-  status = 200,
-  headers = {}
+  status = 200
 ) {
 
   return new Response(
@@ -392,7 +394,7 @@ function json(
       status,
 
       headers: {
-        ...headers,
+        ...CORS,
         "Content-Type":
           "application/json; charset=UTF-8"
       }
