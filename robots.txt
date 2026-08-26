@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nexora-ai.novasearch.workers.dev/sitemap.xml
