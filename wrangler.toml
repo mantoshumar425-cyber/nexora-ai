@@ -1,3 +1,7 @@
 name = "nexora-ai"
 main = "worker.js"
 compatibility_date = "2026-08-26"
+
+[assets]
+directory = "."
+binding = "ASSETS"
