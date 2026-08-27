@@ -1,2034 +1,2571 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-  <meta name="theme-color"
-        content="#08080f">
-
-  <meta name="description"
-        content="Nexora AI — Premium AI assistant for chat, vision, files and image generation.">
-
-  <meta name="robots"
-        content="index, follow">
-
-  <meta name="googlebot"
-        content="index, follow">
-
-  <!-- Google Search Console Verification -->
-  <!-- Replace ONLY the value below with Google's exact verification code -->
-  <meta name="google-site-verification"
-        content="PASTE-GOOGLE-VERIFICATION-CODE-HERE">
-
-  <meta property="og:title"
-        content="Nexora AI">
-
-  <meta property="og:description"
-        content="Your premium AI assistant.">
-
-  <meta property="og:type"
-        content="website">
-
-  <title>Nexora AI — AI Assistant</title>
-
-  <style>
-    :root {
-      --bg: #07070c;
-      --panel: rgba(18,18,28,.82);
-      --panel2: rgba(25,25,38,.92);
-      --border: rgba(255,255,255,.09);
-      --text: #f7f7fb;
-      --muted: #9696a8;
-      --accent: #8b5cf6;
-      --accent2: #6366f1;
-      --danger: #ef4444;
-      --shadow: 0 25px 80px rgba(0,0,0,.45);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-    }
-
-    body {
-      background:
-        radial-gradient(
-          circle at 20% 10%,
-          rgba(99,102,241,.16),
-          transparent 30%
-        ),
-        radial-gradient(
-          circle at 80% 90%,
-          rgba(139,92,246,.13),
-          transparent 30%
-        ),
-        var(--bg);
-
-      color: var(--text);
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      overflow: hidden;
-    }
-
-    button,
-    textarea,
-    input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .app {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-    }
-
-    /* SIDEBAR */
-
-    .sidebar {
-      width: 270px;
-      height: 100%;
-      padding: 18px;
-      background: rgba(10,10,17,.88);
-      border-right: 1px solid var(--border);
-      backdrop-filter: blur(24px);
-
-      display: flex;
-      flex-direction: column;
-
-      transition:
-        transform .25s ease,
-        width .25s ease;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 5px 22px;
-    }
-
-    .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-
-      display: grid;
-      place-items: center;
-
-      font-size: 20px;
-      font-weight: 900;
-
-      background:
-        linear-gradient(
-          135deg,
-          #6366f1,
-          #8b5cf6,
-          #a855f7
-        );
-
-      box-shadow:
-        0 8px 30px
-        rgba(124,58,237,.4);
-    }
-
-    .brand-name {
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .new-chat {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 13px 15px;
-
-      color: white;
-
-      background:
-        linear-gradient(
-          135deg,
-          rgba(99,102,241,.2),
-          rgba(139,92,246,.12)
-        );
-
-      transition: .2s;
-    }
-
-    .new-chat:hover {
-      transform: translateY(-1px);
-      border-color: rgba(139,92,246,.45);
-    }
-
-    .history-title {
-      color: var(--muted);
-      font-size: 12px;
-      margin: 24px 6px 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .history {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .history-item {
-      width: 100%;
-      padding: 11px 12px;
-      margin-bottom: 5px;
-
-      color: #ddd;
-      background: transparent;
-      border: 0;
-      border-radius: 10px;
-
-      text-align: left;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .history-item:hover {
-      background: rgba(255,255,255,.06);
-    }
-
-    .sidebar-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 15px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    /* MAIN */
-
-    .main {
-      flex: 1;
-      min-width: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      height: 70px;
-      flex-shrink: 0;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      padding: 0 22px;
-
-      border-bottom: 1px solid var(--border);
-      background: rgba(8,8,14,.65);
-      backdrop-filter: blur(20px);
-    }
-
-    .top-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .menu-btn {
-      display: none;
-    }
-
-    .model {
-      color: #ddd;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .online {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-
-      color: #a9a9b9;
-      font-size: 12px;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow:
-        0 0 12px #22c55e;
-    }
-
-    /* CHAT */
-
-    .chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 30px 18px 160px;
-      scroll-behavior: smooth;
-    }
-
-    .messages {
-      width: min(900px, 100%);
-      margin: auto;
-    }
-
-    .welcome {
-      min-height: 65vh;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-
-      text-align: center;
-      padding: 30px;
-    }
-
-    .welcome-logo {
-      width: 78px;
-      height: 78px;
-
-      border-radius: 25px;
-
-      display: grid;
-      place-items: center;
-
-      font-size: 35px;
-      font-weight: 900;
-
-      background:
-        linear-gradient(
-          135deg,
-          #6366f1,
-          #8b5cf6,
-          #c084fc
-        );
-
-      box-shadow:
-        0 20px 60px
-        rgba(124,58,237,.35);
-
-      margin-bottom: 25px;
-    }
-
-    .welcome h1 {
-      font-size: clamp(32px, 6vw, 56px);
-      line-height: 1.05;
-      margin-bottom: 15px;
-      letter-spacing: -2px;
-    }
-
-    .gradient {
-      background:
-        linear-gradient(
-          90deg,
-          #818cf8,
-          #c084fc,
-          #f0abfc
-        );
-
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .welcome p {
-      max-width: 620px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .message {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 25px;
-      animation: appear .18s ease;
-    }
-
-    @keyframes appear {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-
-      border-radius: 12px;
-
-      display: grid;
-      place-items: center;
-
-      background: rgba(255,255,255,.08);
-      border: 1px solid var(--border);
-
-      font-size: 14px;
-      font-weight: 800;
-    }
-
-    .message.user .avatar {
-      background:
-        linear-gradient(
-          135deg,
-          #6366f1,
-          #8b5cf6
-        );
-    }
-
-    .message-body {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .message-role {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .message-content {
-      color: #eeeef4;
-      line-height: 1.75;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .message-content code {
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        monospace;
-    }
-
-    .code-block {
-      margin: 14px 0;
-      padding: 16px;
-
-      background: #050509;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-
-      overflow-x: auto;
-      white-space: pre;
-    }
-
-    /* COMPOSER */
-
-    .composer-wrap {
-      position: fixed;
-      left: 270px;
-      right: 0;
-      bottom: 0;
-
-      padding:
-        20px
-        20px
-        calc(20px + env(safe-area-inset-bottom));
-
-      background:
-        linear-gradient(
-          to top,
-          rgba(7,7,12,1) 35%,
-          rgba(7,7,12,.8),
-          transparent
-        );
-
-      pointer-events: none;
-    }
-
-    .composer {
-      width: min(900px, 100%);
-      margin: auto;
-
-      padding: 9px;
-
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-
-      background: rgba(22,22,33,.94);
-      border: 1px solid var(--border);
-      border-radius: 19px;
-
-      box-shadow: var(--shadow);
-
-      pointer-events: auto;
-      backdrop-filter: blur(20px);
-    }
-
-    .tool {
-      width: 43px;
-      height: 43px;
-      flex-shrink: 0;
-
-      border: 0;
-      border-radius: 12px;
-
-      color: #aaaabd;
-      background: transparent;
-
-      display: grid;
-      place-items: center;
-
-      font-size: 19px;
-    }
-
-    .tool:hover {
-      background: rgba(255,255,255,.07);
-      color: white;
-    }
-
-    #messageInput {
-      flex: 1;
-
-      min-height: 43px;
-      max-height: 180px;
-
-      resize: none;
-
-      padding: 11px 5px;
-
-      color: white;
-      background: transparent;
-      border: 0;
-      outline: 0;
-
-      line-height: 1.45;
-    }
-
-    #messageInput::placeholder {
-      color: #777789;
-    }
-
-    .send {
-      width: 43px;
-      height: 43px;
-
-      border: 0;
-      border-radius: 13px;
-
-      color: white;
-
-      background:
-        linear-gradient(
-          135deg,
-          #6366f1,
-          #8b5cf6
-        );
-
-      display: grid;
-      place-items: center;
-
-      font-size: 18px;
-
-      transition: .2s;
-    }
-
-    .send:hover {
-      transform: scale(1.04);
-    }
-
-    .send:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    .file-preview {
-      width: min(900px, 100%);
-      margin: 0 auto 8px;
-
-      padding: 10px 14px;
-
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(20,20,30,.9);
-
-      pointer-events: auto;
-    }
-
-    .file-preview.show {
-      display: flex;
-    }
-
-    .file-name {
-      color: #ccc;
-      font-size: 13px;
-
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .remove-file {
-      border: 0;
-      background: transparent;
-      color: #999;
-      font-size: 18px;
-    }
-
-    .image-result {
-      max-width: 100%;
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-    }
-
-    .typing {
-      display: inline-flex;
-      gap: 5px;
-      padding: 7px 0;
-    }
-
-    .typing span {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #aaa;
-      animation: bounce 1s infinite;
-    }
-
-    .typing span:nth-child(2) {
-      animation-delay: .15s;
-    }
-
-    .typing span:nth-child(3) {
-      animation-delay: .3s;
-    }
-
-    @keyframes bounce {
-      0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: .4;
-      }
-
-      30% {
-        transform: translateY(-5px);
-        opacity: 1;
-      }
-    }
-
-    .error {
-      color: #fca5a5;
-    }
-
-    .download-btn {
-      margin-top: 10px;
-      padding: 9px 13px;
-
-      color: white;
-      background: rgba(255,255,255,.08);
-
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-
-    /* MOBILE */
-
-    @media (max-width: 800px) {
-      .sidebar {
-        position: fixed;
-        z-index: 50;
-        left: 0;
-        top: 0;
-        bottom: 0;
-
-        transform: translateX(-100%);
-        box-shadow: var(--shadow);
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .menu-btn {
-        display: grid;
-      }
-
-      .composer-wrap {
-        left: 0;
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-
-      .chat {
-        padding-top: 20px;
-      }
-
-      .topbar {
-        padding: 0 12px;
-      }
-
-      .welcome {
-        min-height: 60vh;
-      }
-
-      .welcome h1 {
-        letter-spacing: -1px;
-      }
-    }
-
-    @media (max-width: 500px) {
-      .composer {
-        border-radius: 16px;
-      }
-
-      .tool {
-        width: 38px;
-        height: 38px;
-      }
-
-      .send {
-        width: 38px;
-        height: 38px;
-      }
-
-      .message {
-        gap: 9px;
-      }
-
-      .avatar {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-      }
-    }
-
-    #fileInput,
-    #imageInput {
-      display: none;
-    }
-  </style>
+<<head>
+  <meta charset="UTF-8"><meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+«»
+
+  <meta name="theme-color" content="#000000"><meta
+name="google-site-verification"
+content="3wnjh065FLl7XruyuUcWRh7qmgW21won6gzBrQkdy0s"
+
+«»
+
+  <title>Nexora AI — Premium AI Assistant</title><meta
+name="description"
+content="Nexora AI is a modern AI assistant for chatting, learning, coding, file analysis, image understanding and creative tasks."
+
+«»
+
+<meta
+name="robots"
+content="index, follow"
+
+«»
+
+  <link
+    rel="canonical"
+    href="https://nexora-ai.novasearch.workers.dev/"
+  ><meta
+property="og:title"
+content="Nexora AI — Premium AI Assistant"
+
+«»
+
+<meta
+property="og:description"
+content="Chat, learn, code, analyze images and files with Nexora AI."
+
+«»
+
+<meta
+property="og:url"
+content="https://nexora-ai.novasearch.workers.dev/"
+
+«»
+
+<meta
+property="og:type"
+content="website"
+
+«»
+
+<meta
+name="twitter:card"
+content="summary"
+
+«»
+
+<meta
+name="twitter:title"
+content="Nexora AI — Premium AI Assistant"
+
+«»
+
+<meta
+name="twitter:description"
+content="Your intelligent AI assistant for chat, coding, learning and more.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>Nexora AI</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;
+  --panel:#09090b;
+  --surface:#111113;
+  --surface2:#1b1b1f;
+  --surface3:#242428;
+  --border:#29292f;
+  --text:#f7f7f8;
+  --muted:#92929b;
+  --accent:#8b5cf6;
+  --accent2:#06b6d4;
+  --danger:#ff5f6d;
+  --shadow:0 25px 80px rgba(0,0,0,.35);
+}
+
+body.light{
+  --bg:#fff;
+  --panel:#f7f7f8;
+  --surface:#fff;
+  --surface2:#f0f0f2;
+  --surface3:#e6e6e9;
+  --border:#dedee3;
+  --text:#171719;
+  --muted:#66666f;
+  --shadow:0 20px 60px rgba(0,0,0,.12);
+}
+
+html,body{
+  width:100%;
+  height:100%;
+}
+
+body{
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,
+  BlinkMacSystemFont,"Segoe UI",sans-serif;
+  transition:background .25s,color .25s;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+  position:fixed;
+  inset:0 auto 0 0;
+  width:280px;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:.25s ease;
+}
+
+.brand{
+  height:68px;
+  padding:0 16px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.logo{
+  width:39px;
+  height:39px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 30px rgba(99,102,241,.25);
+}
+
+.brand-name{
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:-.4px;
+}
+
+.brand-name span{
+  background:linear-gradient(90deg,#a78bfa,#22d3ee);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.new-chat{
+  height:45px;
+  margin:0 13px 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+  text-align:left;
+  padding:0 14px;
+  transition:.2s;
+}
+
+.new-chat:hover{
+  background:var(--surface2);
+  transform:translateY(-1px);
+}
+
+.search-wrap{
+  padding:0 13px 12px;
+}
+
+.search{
+  width:100%;
+  height:39px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+  background:var(--surface);
+  color:var(--text);
+  padding:0 12px;
+}
+
+.history-label{
+  padding:4px 17px 8px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+}
+
+.history{
+  flex:1;
+  overflow:auto;
+  padding:0 8px;
+}
+
+.history::-webkit-scrollbar{
+  width:4px;
+}
+
+.history::-webkit-scrollbar-thumb{
+  background:var(--border);
+  border-radius:20px;
+}
+
+.chat-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px;
+  margin-bottom:2px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  text-align:left;
+}
+
+.chat-row:hover,
+.chat-row.active{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+.chat-title{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:13px;
+}
+
+.chat-menu{
+  opacity:0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  padding:3px;
+}
+
+.chat-row:hover .chat-menu{
+  opacity:1;
+}
+
+.sidebar-footer{
+  padding:10px;
+  border-top:1px solid var(--border);
+}
+
+.sidebar-btn{
+  width:100%;
+  padding:11px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  text-align:left;
+  cursor:pointer;
+}
+
+.sidebar-btn:hover{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+/* ================= MAIN ================= */
+
+.main{
+  position:absolute;
+  inset:0 0 0 280px;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  height:64px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  padding:0 17px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+  z-index:20;
+}
+
+.menu-btn{
+  display:none;
+  border:0;
+  background:transparent;
+  color:var(--text);
+  font-size:22px;
+  margin-right:12px;
+}
+
+.model-button{
+  border:0;
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  font-weight:750;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.status-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 12px #4ade80;
+}
+
+.header-space{
+  flex:1;
+}
+
+.icon{
+  width:39px;
+  height:39px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:17px;
+}
+
+.icon:hover{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+/* ================= CHAT AREA ================= */
+
+.chat-area{
+  flex:1;
+  overflow:auto;
+  scroll-behavior:smooth;
+}
+
+.welcome{
+  min-height:100%;
+  max-width:920px;
+  margin:auto;
+  padding:35px 20px 170px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.welcome-logo{
+  width:82px;
+  height:82px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font-size:31px;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:
+    0 20px 70px rgba(99,102,241,.24),
+    inset 0 1px rgba(255,255,255,.25);
+}
+
+.welcome h1{
+  margin-top:22px;
+  font-size:clamp(31px,6vw,52px);
+  letter-spacing:-2.5px;
+  text-align:center;
+}
+
+.welcome p{
+  margin-top:8px;
+  color:var(--muted);
+  text-align:center;
+}
+
+.cards{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:34px;
+}
+
+.card{
+  padding:18px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+  transition:.2s;
+}
+
+.card:hover{
+  background:var(--surface2);
+  transform:translateY(-2px);
+  border-color:#45454d;
+}
+
+.card-title{
+  font-size:14px;
+  font-weight:800;
+}
+
+.card-desc{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* ================= MESSAGES ================= */
+
+.messages{
+  max-width:900px;
+  width:100%;
+  margin:auto;
+  padding-bottom:170px;
+}
+
+.message{
+  display:flex;
+  gap:14px;
+  padding:25px 20px;
+  border-bottom:1px solid color-mix(
+    in srgb,var(--border) 45%,transparent
+  );
+}
+
+.avatar{
+  width:37px;
+  height:37px;
+  flex:0 0 37px;
+  border-radius:11px;
+  background:var(--surface2);
+  display:grid;
+  place-items:center;
+  font-size:10px;
+  font-weight:850;
+}
+
+.assistant .avatar{
+  color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+
+.message-body{
+  flex:1;
+  min-width:0;
+}
+
+.message-name{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:750;
+  margin-bottom:8px;
+}
+
+.message-text{
+  font-size:15px;
+  line-height:1.75;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.message-text code{
+  font-family:
+    ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.code-wrap{
+  margin:12px 0;
+  border:1px solid var(--border);
+  border-radius:13px;
+  overflow:hidden;
+  background:#09090b;
+}
+
+.code-head{
+  height:36px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#141418;
+  border-bottom:1px solid #29292f;
+  color:#aaa;
+  font-size:11px;
+}
+
+.code-copy{
+  border:0;
+  background:#222228;
+  color:#ddd;
+  border-radius:7px;
+  padding:5px 8px;
+  cursor:pointer;
+}
+
+.code-content{
+  padding:15px;
+  overflow:auto;
+  color:#eee;
+  font-family:
+    ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;
+  line-height:1.65;
+  white-space:pre;
+}
+
+.actions{
+  display:flex;
+  gap:4px;
+  margin-top:9px;
+}
+
+.action{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:7px;
+  font-size:12px;
+}
+
+.action:hover{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+/* ================= COMPOSER ================= */
+
+.composer-zone{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:14px 14px 17px;
+  pointer-events:none;
+  background:linear-gradient(
+    to top,
+    var(--bg) 65%,
+    transparent
+  );
+}
+
+.composer{
+  max-width:900px;
+  margin:auto;
+  pointer-events:auto;
+}
+
+.mode-row{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:8px;
+}
+
+.mode-btn{
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--muted);
+  border-radius:20px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-size:11px;
+}
+
+.mode-btn.active{
+  color:var(--text);
+  background:var(--surface2);
+  border-color:#4b4b54;
+}
+
+.input-box{
+  border:1px solid var(--border);
+  background:var(--surface);
+  border-radius:19px;
+  padding:8px 9px 8px 13px;
+  box-shadow:var(--shadow);
+}
+
+textarea{
+  width:100%;
+  min-height:40px;
+  max-height:170px;
+  resize:none;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--text);
+  font-family:inherit;
+  font-size:15px;
+  line-height:1.5;
+  padding:8px 2px;
+}
+
+textarea::placeholder{
+  color:var(--muted);
+}
+
+.input-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.attach,
+.voice{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:17px;
+}
+
+.attach:hover,
+.voice:hover{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+.send{
+  margin-left:auto;
+  width:41px;
+  height:41px;
+  border:0;
+  border-radius:12px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  cursor:pointer;
+  font-size:19px;
+  font-weight:900;
+}
+
+.send:disabled{
+  opacity:.45;
+  cursor:wait;
+}
+
+.note{
+  text-align:center;
+  color:var(--muted);
+  font-size:10px;
+  opacity:.7;
+  margin-top:7px;
+}
+
+/* ================= ATTACHMENT ================= */
+
+.attachment-preview{
+  display:none;
+  margin-bottom:7px;
+  padding:8px 10px;
+  border-radius:11px;
+  background:var(--surface2);
+  font-size:12px;
+  color:var(--muted);
+}
+
+.attachment-preview.show{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.preview-thumb{
+  width:30px;
+  height:30px;
+  border-radius:7px;
+  object-fit:cover;
+  display:none;
+}
+
+.remove-file{
+  margin-left:auto;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:18px;
+}
+
+/* ================= TYPING ================= */
+
+.typing{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:7px 0;
+}
+
+.dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--muted);
+  animation:bounce 1.1s infinite;
+}
+
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+
+@keyframes bounce{
+  0%,60%,100%{transform:translateY(0)}
+  30%{transform:translateY(-4px)}
+}
+
+/* ================= MODAL ================= */
+
+.backdrop{
+  position:fixed;
+  inset:0;
+  display:none;
+  place-items:center;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(8px);
+  z-index:300;
+}
+
+.backdrop.show{
+  display:grid;
+}
+
+.modal{
+  width:min(460px,calc(100% - 28px));
+  max-height:90vh;
+  overflow:auto;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:21px;
+  box-shadow:0 30px 100px rgba(0,0,0,.5);
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.modal h2{
+  font-size:19px;
+}
+
+.close{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:22px;
+}
+
+.setting{
+  margin-top:20px;
+}
+
+.setting-label{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:8px;
+}
+
+.select,
+.setting-btn{
+  width:100%;
+  height:43px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface);
+  color:var(--text);
+  padding:0 11px;
+  outline:0;
+}
+
+.setting-btn{
+  cursor:pointer;
+  text-align:left;
+}
+
+.setting-btn:hover{
+  background:var(--surface2);
+}
+
+.theme-row{
+  display:flex;
+  gap:8px;
+}
+
+.theme-btn{
+  flex:1;
+  height:43px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.theme-btn:hover{
+  background:var(--surface2);
+}
+
+/* ================= TOAST ================= */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:96px;
+  transform:translate(-50%,15px);
+  opacity:0;
+  pointer-events:none;
+  background:var(--surface3);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 16px;
+  border-radius:11px;
+  font-size:12px;
+  transition:.2s;
+  z-index:500;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+/* ================= MOBILE ================= */
+
+.overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:90;
+}
+
+@media(max-width:760px){
+
+  .sidebar{
+    transform:translateX(-100%);
+  }
+
+  .sidebar.open{
+    transform:translateX(0);
+  }
+
+  .overlay.open{
+    display:block;
+  }
+
+  .main{
+    left:0;
+  }
+
+  .menu-btn{
+    display:block;
+  }
+
+  .cards{
+    grid-template-columns:1fr;
+  }
+
+  .message{
+    padding:20px 14px;
+  }
+
+  .composer-zone{
+    padding-left:7px;
+    padding-right:7px;
+  }
+
+  .welcome{
+    padding-left:15px;
+    padding-right:15px;
+  }
+}
+</style>
 </head>
 
 <body>
 
-<div class="app">
+<aside class="sidebar" id="sidebar">
 
-  <!-- SIDEBAR -->
-
-  <aside class="sidebar" id="sidebar">
-
-    <div class="brand">
-      <div class="logo">N</div>
-
-      <div class="brand-name">
-        Nexora AI
-      </div>
+  <div class="brand">
+    <div class="logo">N</div>
+    <div class="brand-name">
+      <span>Nexora</span> AI
     </div>
+  </div>
+
+  <button class="new-chat" onclick="newChat()">
+    ＋ New chat
+  </button>
+
+  <div class="search-wrap">
+    <input
+      id="search"
+      class="search"
+      placeholder="Search chats..."
+      oninput="renderHistory()"
+    >
+  </div>
+
+  <div class="history-label">Chats</div>
+
+  <div class="history" id="history"></div>
+
+  <div class="sidebar-footer">
+    <button class="sidebar-btn" onclick="openSettings()">
+      ⚙️ Settings
+    </button>
+  </div>
+
+</aside>
+
+<div
+  class="overlay"
+  id="overlay"
+  onclick="closeSidebar()"
+></div>
+
+<main class="main">
+
+<header class="header">
+
+  <button
+    class="menu-btn"
+    onclick="openSidebar()"
+  >
+    ☰
+  </button>
+
+  <button
+    class="model-button"
+    onclick="openSettings()"
+  >
+    <span class="status-dot"></span>
+    <span id="headerModel">Nexora AI</span>
+    ▾
+  </button>
+
+  <div class="header-space"></div>
+
+  <button
+    class="icon"
+    onclick="toggleTheme()"
+    title="Theme"
+  >
+    <span id="themeIcon">☾</span>
+  </button>
+
+  <button
+    class="icon"
+    onclick="openSettings()"
+    title="Settings"
+  >
+    ⚙
+  </button>
+
+</header>
+
+<div class="chat-area" id="chatArea">
+
+<section class="welcome" id="welcome">
+
+  <div class="welcome-logo">N</div>
+
+  <h1>What can I help with?</h1>
+
+  <p>
+    A premium intelligent workspace powered by Nexora AI
+  </p>
+
+  <div class="cards">
 
     <button
-      class="new-chat"
-      id="newChat">
-      ＋ New Chat
+      class="card"
+      onclick="suggest('Explain photosynthesis in simple words')"
+    >
+      <div class="card-title">📚 Learn</div>
+      <div class="card-desc">
+        Understand difficult topics clearly
+      </div>
     </button>
 
-    <div class="history-title">
-      Conversations
-    </div>
-
-    <div
-      class="history"
-      id="history">
-    </div>
-
-    <div class="sidebar-footer">
-      Nexora AI
-      <br>
-      Premium AI Assistant
-    </div>
-
-  </aside>
-
-
-  <!-- MAIN -->
-
-  <main class="main">
-
-    <header class="topbar">
-
-      <div class="top-left">
-
-        <button
-          class="tool menu-btn"
-          id="menuBtn">
-          ☰
-        </button>
-
-        <div class="model">
-          Nexora AI
-        </div>
-
-        <div class="online">
-          <span class="dot"></span>
-          Online
-        </div>
-
+    <button
+      class="card"
+      onclick="suggest('Create a modern website idea for me')"
+    >
+      <div class="card-title">💡 Brainstorm</div>
+      <div class="card-desc">
+        Generate creative and useful ideas
       </div>
+    </button>
 
-    </header>
-
-
-    <!-- CHAT -->
-
-    <section
-      class="chat"
-      id="chat">
-
-      <div
-        class="messages"
-        id="messages">
-
-        <div
-          class="welcome"
-          id="welcome">
-
-          <div class="welcome-logo">
-            N
-          </div>
-
-          <h1>
-            Welcome to
-            <span class="gradient">
-              Nexora AI
-            </span>
-          </h1>
-
-          <p>
-            Ask questions, analyze images and
-            documents, write code, learn concepts,
-            or generate images.
-          </p>
-
-        </div>
-
+    <button
+      class="card"
+      onclick="suggest('Write a professional introduction for my project')"
+    >
+      <div class="card-title">✍️ Write</div>
+      <div class="card-desc">
+        Create polished original content
       </div>
+    </button>
 
-    </section>
-
-
-    <!-- COMPOSER -->
-
-    <div class="composer-wrap">
-
-      <div
-        class="file-preview"
-        id="filePreview">
-
-        <span
-          class="file-name"
-          id="fileName">
-        </span>
-
-        <button
-          class="remove-file"
-          id="removeFile">
-          ×
-        </button>
-
+    <button
+      class="card"
+      onclick="activateImageMode()"
+    >
+      <div class="card-title">🎨 Create image</div>
+      <div class="card-desc">
+        Generate an image from your idea
       </div>
+    </button>
 
-      <div class="composer">
+  </div>
 
-        <button
-          class="tool"
-          id="attachBtn"
-          title="Upload file">
-          ＋
-        </button>
+</section>
 
-        <button
-          class="tool"
-          id="imageBtn"
-          title="Generate image">
-          ◇
-        </button>
-
-        <textarea
-          id="messageInput"
-          rows="1"
-          placeholder="Message Nexora AI..."
-          autocomplete="off">
-        </textarea>
-
-        <button
-          class="send"
-          id="sendBtn"
-          title="Send">
-          ➤
-        </button>
-
-      </div>
-
-    </div>
-
-  </main>
+<div
+  class="messages"
+  id="messages"
+></div>
 
 </div>
 
+<div class="composer-zone">
+
+<form
+  class="composer"
+  id="composer"
+>
+
+<div class="mode-row">
+
+  <button
+    type="button"
+    class="mode-btn active"
+    id="chatMode"
+    onclick="setMode('chat')"
+  >
+    💬 Chat
+  </button>
+
+  <button
+    type="button"
+    class="mode-btn"
+    id="imageMode"
+    onclick="setMode('image')"
+  >
+    🎨 Image
+  </button>
+
+  <button
+    type="button"
+    class="mode-btn"
+    id="codeMode"
+    onclick="setMode('code')"
+  >
+    💻 Code
+  </button>
+
+</div>
+
+<div
+  class="attachment-preview"
+  id="attachmentPreview"
+>
+
+  <img
+    class="preview-thumb"
+    id="previewThumb"
+    alt=""
+  >
+
+  <span id="attachmentName"></span>
+
+  <button
+    type="button"
+    class="remove-file"
+    onclick="removeFile()"
+  >
+    ×
+  </button>
+
+</div>
+
+<div class="input-box">
+
+<textarea
+  id="message"
+  rows="1"
+  placeholder="Message Nexora AI..."
+></textarea>
+
+<div class="input-actions">
+
+<button
+  type="button"
+  class="attach"
+  onclick="document.getElementById('file').click()"
+  title="Attach file"
+>
+  ＋
+</button>
 
 <input
+  id="file"
   type="file"
-  id="fileInput"
-  accept=".txt,.csv,.json,.html,.css,.js,.xml,.pdf,image/*">
+  hidden
+  accept="image/*,.txt,.pdf,.doc,.docx"
+  onchange="fileSelected(this)"
+>
 
-<input
-  type="file"
-  id="imageInput"
-  accept="image/*">
+<button
+  type="button"
+  class="voice"
+  onclick="startVoice()"
+  title="Voice input"
+>
+  🎙
+</button>
 
+<button
+  type="submit"
+  class="send"
+  id="send"
+>
+  ↑
+</button>
+
+</div>
+
+</div>
+
+<div class="note">
+Nexora AI can make mistakes. Check important information.
+</div>
+
+</form>
+
+</div>
+
+</main>
+
+<!-- SETTINGS -->
+
+<div
+  class="backdrop"
+  id="settingsModal"
+  onclick="closeSettings(event)"
+>
+
+<div
+  class="modal"
+  onclick="event.stopPropagation()"
+>
+
+<div class="modal-head">
+
+<h2>Nexora Settings</h2>
+
+<button
+  class="close"
+  onclick="closeSettings()"
+>
+×
+</button>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+Appearance
+</span>
+
+<div class="theme-row">
+
+<button
+  class="theme-btn"
+  onclick="setTheme('light')"
+>
+☀ Light
+</button>
+
+<button
+  class="theme-btn"
+  onclick="setTheme('dark')"
+>
+☾ Dark
+</button>
+
+</div>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+AI Model
+</span>
+
+<select
+  class="select"
+  id="modelSelect"
+  onchange="changeModel()"
+>
+
+<option value="gemini-3.6-flash">
+Gemini 3.6 Flash
+</option>
+
+</select>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+Chat history
+</span>
+
+<button
+  class="setting-btn"
+  onclick="clearHistory()"
+>
+🗑 Delete all chat history
+</button>
+
+</div>
+
+<div class="setting">
+
+<span class="setting-label">
+About
+</span>
+
+<button
+  class="setting-btn"
+  onclick="toast('Nexora AI — Premium AI Workspace')"
+>
+✨ Nexora AI Premium
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div
+  class="toast"
+  id="toast"
+></div>
 
 <script>
-  /* =====================================================
-     NEXORA AI FRONTEND
-  ===================================================== */
 
-  const input =
-    document.getElementById(
-      "messageInput"
+/* =================================================
+   CONFIG
+================================================= */
+
+const API="/api/chat";
+const IMAGE_API="/api/generate-image";
+
+const DEFAULT_MODEL="gemini-3.6-flash";
+
+
+/* =================================================
+   STATE
+================================================= */
+
+let chats=[];
+let currentChat=null;
+let conversation=[];
+let selectedFile=null;
+let selectedImage=null;
+let sending=false;
+let currentMode="chat";
+let selectedModel=DEFAULT_MODEL;
+
+
+/* =================================================
+   ELEMENTS
+================================================= */
+
+const input=document.getElementById("message");
+const send=document.getElementById("send");
+const messages=document.getElementById("messages");
+const welcome=document.getElementById("welcome");
+const chatArea=document.getElementById("chatArea");
+const historyBox=document.getElementById("history");
+
+
+/* =================================================
+   THEME
+================================================= */
+
+function setTheme(theme){
+
+  document.body.classList.toggle(
+    "light",
+    theme==="light"
+  );
+
+  localStorage.setItem(
+    "nexora_theme",
+    theme
+  );
+
+  document.getElementById(
+    "themeIcon"
+  ).textContent=
+    theme==="light" ? "☀" : "☾";
+}
+
+function toggleTheme(){
+
+  const light=
+    document.body.classList.contains("light");
+
+  setTheme(
+    light ? "dark" : "light"
+  );
+}
+
+function loadTheme(){
+
+  setTheme(
+    localStorage.getItem("nexora_theme") ||
+    "dark"
+  );
+}
+
+
+/* =================================================
+   MODE
+================================================= */
+
+function setMode(mode){
+
+  currentMode=mode;
+
+  document
+    .getElementById("chatMode")
+    .classList.toggle(
+      "active",
+      mode==="chat"
     );
 
-  const sendBtn =
-    document.getElementById(
-      "sendBtn"
+  document
+    .getElementById("imageMode")
+    .classList.toggle(
+      "active",
+      mode==="image"
     );
 
-  const messages =
-    document.getElementById(
-      "messages"
+  document
+    .getElementById("codeMode")
+    .classList.toggle(
+      "active",
+      mode==="code"
     );
 
-  const chat =
-    document.getElementById(
-      "chat"
+  if(mode==="image"){
+
+    input.placeholder=
+      "Describe the image you want to create...";
+
+  }else if(mode==="code"){
+
+    input.placeholder=
+      "Describe the code you want...";
+
+  }else{
+
+    input.placeholder=
+      "Message Nexora AI...";
+
+  }
+
+  input.focus();
+}
+
+function activateImageMode(){
+
+  setMode("image");
+
+  input.value="Create a premium futuristic AI artwork";
+
+  resizeInput();
+
+  input.focus();
+}
+
+
+/* =================================================
+   STORAGE
+================================================= */
+
+function loadChats(){
+
+  try{
+
+    chats=JSON.parse(
+      localStorage.getItem(
+        "nexora_chats"
+      ) || "[]"
     );
 
-  const historyEl =
-    document.getElementById(
-      "history"
-    );
+    if(!Array.isArray(chats)){
+      chats=[];
+    }
 
-  const fileInput =
-    document.getElementById(
-      "fileInput"
-    );
+  }catch{
 
-  const imageInput =
-    document.getElementById(
-      "imageInput"
-    );
+    chats=[];
 
-  const attachBtn =
-    document.getElementById(
-      "attachBtn"
-    );
-
-  const imageBtn =
-    document.getElementById(
-      "imageBtn"
-    );
-
-  const filePreview =
-    document.getElementById(
-      "filePreview"
-    );
-
-  const fileNameEl =
-    document.getElementById(
-      "fileName"
-    );
-
-  const removeFileBtn =
-    document.getElementById(
-      "removeFile"
-    );
-
-  const newChatBtn =
-    document.getElementById(
-      "newChat"
-    );
-
-  const menuBtn =
-    document.getElementById(
-      "menuBtn"
-    );
-
-  const sidebar =
-    document.getElementById(
-      "sidebar"
-    );
-
-
-  let conversation = [];
-  let chats = [];
-  let currentChat = null;
-
-  let selectedFile = null;
-  let selectedImage = null;
-
-  let imageMode = false;
-  let sending = false;
-
-
-  /* =====================================================
-     STORAGE
-  ===================================================== */
-
-  try {
-    chats =
-      JSON.parse(
-        localStorage.getItem(
-          "nexora_chats"
-        ) || "[]"
-      );
-  } catch {
-    chats = [];
   }
 
   renderHistory();
+}
+
+function saveChats(){
+
+  localStorage.setItem(
+    "nexora_chats",
+    JSON.stringify(chats)
+  );
+}
 
 
-  function saveChats() {
-    try {
-      localStorage.setItem(
-        "nexora_chats",
-        JSON.stringify(chats)
-      );
-    } catch {}
+/* =================================================
+   NEW CHAT
+================================================= */
+
+function newChat(){
+
+  currentChat=null;
+  conversation=[];
+
+  messages.innerHTML="";
+  messages.style.display="none";
+  welcome.style.display="flex";
+
+  input.value="";
+
+  removeFile();
+
+  setMode("chat");
+
+  resizeInput();
+
+  closeSidebar();
+
+  input.focus();
+
+  renderHistory();
+}
+
+
+/* =================================================
+   MESSAGE RENDERING
+================================================= */
+
+function createMessage(role,text){
+
+  welcome.style.display="none";
+  messages.style.display="block";
+
+  const article=document.createElement("article");
+
+  article.className=
+    "message "+role;
+
+  const avatar=document.createElement("div");
+
+  avatar.className="avatar";
+
+  avatar.textContent=
+    role==="user" ? "You" : "N";
+
+  const body=document.createElement("div");
+
+  body.className="message-body";
+
+  const name=document.createElement("div");
+
+  name.className="message-name";
+
+  name.textContent=
+    role==="user"
+      ? "You"
+      : "Nexora AI";
+
+  const textElement=document.createElement("div");
+
+  textElement.className="message-text";
+
+  renderAnswer(textElement,text);
+
+  body.appendChild(name);
+  body.appendChild(textElement);
+
+  if(role==="assistant"){
+
+    const actions=document.createElement("div");
+
+    actions.className="actions";
+
+    const copy=document.createElement("button");
+
+    copy.className="action";
+    copy.textContent="Copy";
+
+    copy.onclick=()=>{
+      copyText(textElement.innerText);
+    };
+
+    actions.appendChild(copy);
+
+    body.appendChild(actions);
   }
 
+  article.appendChild(avatar);
+  article.appendChild(body);
 
-  /* =====================================================
-     NEW CHAT
-  ===================================================== */
+  messages.appendChild(article);
 
-  newChatBtn.addEventListener(
-    "click",
-    newChat
+  scrollBottom();
+
+  return textElement;
+}
+
+
+/* =================================================
+   ANSWER RENDERER
+================================================= */
+
+function renderAnswer(element,text){
+
+  element.innerHTML="";
+
+  if(!text){
+
+    return;
+  }
+
+  const parts=
+    text.split(/```([\s\S]*?)```/g);
+
+  parts.forEach((part,index)=>{
+
+    if(index%2===1){
+
+      const wrap=document.createElement("div");
+
+      wrap.className="code-wrap";
+
+      const head=document.createElement("div");
+
+      head.className="code-head";
+
+      const label=document.createElement("span");
+
+      label.textContent="Code";
+
+      const button=document.createElement("button");
+
+      button.className="code-copy";
+
+      button.textContent="Copy";
+
+      button.onclick=()=>{
+        copyText(part);
+      };
+
+      head.appendChild(label);
+      head.appendChild(button);
+
+      const code=document.createElement("pre");
+
+      code.className="code-content";
+
+      code.textContent=part.trim();
+
+      wrap.appendChild(head);
+      wrap.appendChild(code);
+
+      element.appendChild(wrap);
+
+    }else{
+
+      const normal=document.createElement("span");
+
+      normal.textContent=part;
+
+      element.appendChild(normal);
+
+    }
+
+  });
+}
+
+
+/* =================================================
+   SEND
+================================================= */
+
+async function sendMessage(){
+
+  if(sending){
+    return;
+  }
+
+  const text=input.value.trim();
+
+  if(!text){
+    return;
+  }
+
+  if(currentMode==="image"){
+
+    await generateImage(text);
+
+    return;
+  }
+
+  sending=true;
+  send.disabled=true;
+
+  if(!currentChat){
+
+    currentChat=Date.now().toString();
+
+    chats.unshift({
+      id:currentChat,
+      title:text.slice(0,55),
+      messages:[],
+      updated:Date.now()
+    });
+  }
+
+  createMessage("user",text);
+
+  conversation.push({
+    role:"user",
+    content:text
+  });
+
+  const active=chats.find(
+    c=>c.id===currentChat
   );
 
+  if(active){
 
-  function newChat() {
-    conversation = [];
-    currentChat = null;
+    active.messages.push({
+      role:"user",
+      content:text
+    });
 
-    messages.innerHTML = `
-      <div class="welcome" id="welcome">
-        <div class="welcome-logo">N</div>
+    active.updated=Date.now();
+  }
 
-        <h1>
-          Welcome to
-          <span class="gradient">
-            Nexora AI
-          </span>
-        </h1>
+  input.value="";
+  resizeInput();
 
-        <p>
-          Ask questions, analyze images and
-          documents, write code, learn concepts,
-          or generate images.
-        </p>
-      </div>
-    `;
+  const assistantText=
+    createMessage(
+      "assistant",
+      ""
+    );
+
+  try{
+
+    const payload={
+      message:text,
+      history:conversation.slice(-12),
+      model:selectedModel
+    };
+
+    if(selectedImage){
+
+      payload.image=selectedImage;
+    }
 
     removeFile();
 
-    input.value = "";
-    imageMode = false;
-
-    input.placeholder =
-      "Message Nexora AI...";
-
-    input.focus();
-  }
-
-
-  /* =====================================================
-     SIDEBAR
-  ===================================================== */
-
-  menuBtn.addEventListener(
-    "click",
-    () => {
-      sidebar.classList.toggle(
-        "open"
-      );
-    }
-  );
-
-
-  /* =====================================================
-     FILE
-  ===================================================== */
-
-  attachBtn.addEventListener(
-    "click",
-    () => {
-      fileInput.click();
-    }
-  );
-
-
-  fileInput.addEventListener(
-    "change",
-    async () => {
-      const file =
-        fileInput.files?.[0];
-
-      if (!file) return;
-
-      selectedFile = file;
-      selectedImage = null;
-
-      fileNameEl.textContent =
-        file.name;
-
-      filePreview.classList.add(
-        "show"
+    const response=
+      await fetch(
+        API,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify(payload)
+        }
       );
 
-      if (
-        file.type.startsWith(
-          "image/"
-        )
-      ) {
-        selectedImage =
-          await fileToBase64(file);
-      }
-    }
-  );
+    if(!response.ok){
 
-
-  removeFileBtn.addEventListener(
-    "click",
-    removeFile
-  );
-
-
-  function removeFile() {
-    selectedFile = null;
-    selectedImage = null;
-
-    fileInput.value = "";
-    imageInput.value = "";
-
-    filePreview.classList.remove(
-      "show"
-    );
-
-    fileNameEl.textContent = "";
-  }
-
-
-  /* =====================================================
-     IMAGE BUTTON
-  ===================================================== */
-
-  imageBtn.addEventListener(
-    "click",
-    () => {
-      imageMode = !imageMode;
-
-      input.placeholder =
-        imageMode
-          ? "Describe the image you want..."
-          : "Message Nexora AI...";
-
-      input.focus();
-    }
-  );
-
-
-  /* =====================================================
-     ENTER
-  ===================================================== */
-
-  input.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key === "Enter" &&
-        !event.shiftKey
-      ) {
-        event.preventDefault();
-
-        sendMessage();
-      }
-    }
-  );
-
-
-  input.addEventListener(
-    "input",
-    resizeInput
-  );
-
-
-  function resizeInput() {
-    input.style.height =
-      "auto";
-
-    input.style.height =
-      Math.min(
-        input.scrollHeight,
-        180
-      ) + "px";
-  }
-
-
-  /* =====================================================
-     SEND
-  ===================================================== */
-
-  sendBtn.addEventListener(
-    "click",
-    sendMessage
-  );
-
-
-  async function sendMessage() {
-    if (sending) return;
-
-    const text =
-      input.value.trim();
-
-    if (!text) return;
-
-
-    if (imageMode) {
-      await generateImage(text);
-      return;
-    }
-
-
-    sending = true;
-    sendBtn.disabled = true;
-
-
-    const welcome =
-      document.getElementById(
-        "welcome"
-      );
-
-    if (welcome) {
-      welcome.remove();
-    }
-
-
-    if (!currentChat) {
-      currentChat =
-        Date.now().toString();
-
-      chats.unshift({
-        id: currentChat,
-        title:
-          text.slice(0, 60),
-        messages: [],
-        updated: Date.now()
-      });
-    }
-
-
-    addMessage(
-      "user",
-      text
-    );
-
-
-    conversation.push({
-      role: "user",
-      content: text
-    });
-
-
-    const active =
-      chats.find(
-        c =>
-          c.id ===
-          currentChat
-      );
-
-    if (active) {
-      active.messages.push({
-        role: "user",
-        content: text
-      });
-
-      active.updated =
-        Date.now();
-    }
-
-
-    input.value = "";
-    resizeInput();
-
-
-    const assistant =
-      addMessage(
-        "assistant",
-        ""
-      );
-
-
-    assistant.content.innerHTML =
-      `
-        <div class="typing">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      `;
-
-
-    scrollBottom();
-
-
-    try {
-
-      let payload = {
-        message: text,
-
-        history:
-          conversation
-            .slice(-20)
-            .map(item => ({
-              role:
-                item.role,
-              content:
-                item.content
-            }))
-      };
-
-
-      if (selectedFile) {
-
-        const encoded =
-          await fileToBase64(
-            selectedFile
-          );
-
-        payload.file = {
-          name:
-            selectedFile.name,
-
-          mimeType:
-            selectedFile.type ||
-            "application/octet-stream",
-
-          data:
-            encoded.data
-        };
-      }
-
-
-      const response =
-        await fetch(
-          "/api/chat",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body:
-              JSON.stringify(
-                payload
-              )
-          }
-        );
-
-
-      const raw =
+      const errorText=
         await response.text();
 
+      let errorMessage=
+        "Request failed.";
 
-      let data;
+      try{
 
-      try {
-        data =
-          JSON.parse(raw);
-      } catch {
-        throw new Error(
-          "Nexora server returned an invalid response."
-        );
-      }
+        const error=
+          JSON.parse(errorText);
 
+        errorMessage=
+          error.error ||
+          errorMessage;
 
-      if (!response.ok) {
-        throw new Error(
-          data?.error ||
-          `Server error ${response.status}`
-        );
-      }
+      }catch{}
 
-
-      if (!data?.success) {
-        throw new Error(
-          data?.error ||
-          "Nexora AI failed to respond."
-        );
-      }
-
-
-      const answer =
-        String(
-          data?.answer ||
-          data?.text ||
-          ""
-        ).trim();
-
-
-      if (!answer) {
-        throw new Error(
-          "Nexora AI returned an empty response."
-        );
-      }
-
-
-      renderAnswer(
-        assistant.content,
-        answer
+      throw new Error(
+        errorMessage
       );
+    }
 
+    if(!response.body){
 
-      conversation.push({
-        role: "assistant",
-        content: answer
+      throw new Error(
+        "Streaming is not supported."
+      );
+    }
+
+    const reader=
+      response.body.getReader();
+
+    const decoder=
+      new TextDecoder();
+
+    let buffer="";
+    let answer="";
+
+    while(true){
+
+      const {value,done}=
+        await reader.read();
+
+      if(done){
+        break;
+      }
+
+      buffer+=
+        decoder.decode(
+          value,
+          {stream:true}
+        );
+
+      const lines=
+        buffer.split("\n");
+
+      buffer=
+        lines.pop() || "";
+
+      for(const line of lines){
+
+        const trimmed=line.trim();
+
+        if(
+          !trimmed ||
+          trimmed.startsWith(":")
+        ){
+          continue;
+        }
+
+        if(
+          !trimmed.startsWith("data:")
+        ){
+          continue;
+        }
+
+        const raw=
+          trimmed
+            .slice(5)
+            .trim();
+
+        if(raw==="[DONE]"){
+          continue;
+        }
+
+        try{
+
+          const chunk=
+            JSON.parse(raw);
+
+          const parts=
+            chunk
+              ?.candidates?.[0]
+              ?.content?.parts;
+
+          if(Array.isArray(parts)){
+
+            for(const part of parts){
+
+              if(
+                typeof part?.text===
+                "string"
+              ){
+
+                answer+=part.text;
+
+                renderAnswer(
+                  assistantText,
+                  answer
+                );
+
+                scrollBottom();
+              }
+            }
+          }
+
+        }catch{
+
+        }
+      }
+    }
+
+    if(!answer.trim()){
+
+      throw new Error(
+        "No response received."
+      );
+    }
+
+    conversation.push({
+      role:"assistant",
+      content:answer
+    });
+
+    if(active){
+
+      active.messages.push({
+        role:"assistant",
+        content:answer
       });
 
+      active.updated=Date.now();
+    }
 
-      if (active) {
-        active.messages.push({
-          role: "assistant",
-          content: answer
-        });
+    saveChats();
+    renderHistory();
 
-        active.updated =
-          Date.now();
+  }catch(error){
+
+    renderAnswer(
+      assistantText,
+      "Sorry, something went wrong.\n\n"+
+      error.message
+    );
+
+  }finally{
+
+    sending=false;
+    send.disabled=false;
+    input.focus();
+
+  }
+}
+
+
+/* =================================================
+   IMAGE GENERATION
+================================================= */
+
+async function generateImage(prompt){
+
+  if(sending){
+    return;
+  }
+
+  sending=true;
+  send.disabled=true;
+
+  createMessage(
+    "user",
+    "🎨 "+prompt
+  );
+
+  const assistant=
+    createMessage(
+      "assistant",
+      "Creating your image..."
+    );
+
+  try{
+
+    const response=
+      await fetch(
+        IMAGE_API,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify({
+            prompt,
+            model:selectedModel
+          })
+        }
+      );
+
+    const data=
+      await response.json();
+
+    if(!response.ok){
+
+      throw new Error(
+        data?.error ||
+        "Image generation is not configured yet."
+      );
+    }
+
+    if(data.imageUrl){
+
+      assistant.innerHTML="";
+
+      const img=
+        document.createElement("img");
+
+      img.src=data.imageUrl;
+
+      img.alt=prompt;
+
+      img.style.maxWidth="100%";
+      img.style.borderRadius="16px";
+      img.style.display="block";
+
+      assistant.appendChild(img);
+
+    }else{
+
+      throw new Error(
+        "Image generator returned no image."
+      );
+    }
+
+  }catch(error){
+
+    renderAnswer(
+      assistant,
+      "Image generation is not connected yet.\n\n"+
+      error.message
+    );
+
+  }finally{
+
+    sending=false;
+    send.disabled=false;
+  }
+}
+
+
+/* =================================================
+   FILES / IMAGES
+================================================= */
+
+function fileSelected(inputElement){
+
+  const file=
+    inputElement.files?.[0];
+
+  if(!file){
+    return;
+  }
+
+  selectedFile=file;
+
+  const preview=
+    document.getElementById(
+      "attachmentPreview"
+    );
+
+  const name=
+    document.getElementById(
+      "attachmentName"
+    );
+
+  const thumb=
+    document.getElementById(
+      "previewThumb"
+    );
+
+  name.textContent=
+    "📎 "+file.name;
+
+  preview.classList.add("show");
+
+  if(file.type.startsWith("image/")){
+
+    thumb.style.display="block";
+
+    const reader=
+      new FileReader();
+
+    reader.onload=()=>{
+
+      const result=
+        String(reader.result);
+
+      thumb.src=result;
+
+      const comma=
+        result.indexOf(",");
+
+      selectedImage={
+        mimeType:file.type,
+        data:
+          comma>=0
+            ? result.slice(comma+1)
+            : result
+      };
+    };
+
+    reader.readAsDataURL(file);
+
+  }else{
+
+    thumb.style.display="none";
+    selectedImage=null;
+
+    toast(
+      "File attached. PDF/DOCX processing requires the Worker file-processing endpoint."
+    );
+  }
+}
+
+function removeFile(){
+
+  selectedFile=null;
+  selectedImage=null;
+
+  const file=
+    document.getElementById("file");
+
+  file.value="";
+
+  document
+    .getElementById(
+      "attachmentPreview"
+    )
+    .classList.remove("show");
+
+  document
+    .getElementById(
+      "previewThumb"
+    ).style.display="none";
+}
+
+
+/* =================================================
+   VOICE
+================================================= */
+
+function startVoice(){
+
+  const Recognition=
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if(!Recognition){
+
+    toast(
+      "Voice input isn't supported here."
+    );
+
+    return;
+  }
+
+  const recognition=
+    new Recognition();
+
+  recognition.lang="en-IN";
+  recognition.interimResults=false;
+  recognition.continuous=false;
+
+  recognition.onstart=()=>{
+    toast("Listening...");
+  };
+
+  recognition.onresult=event=>{
+
+    const text=
+      event
+        .results?.[0]?.[0]
+        ?.transcript;
+
+    if(text){
+
+      input.value+=
+        (input.value ? " " : "")+
+        text;
+
+      resizeInput();
+    }
+  };
+
+  recognition.onerror=()=>{
+    toast("Voice input failed.");
+  };
+
+  recognition.start();
+}
+
+
+/* =================================================
+   HISTORY
+================================================= */
+
+function renderHistory(){
+
+  historyBox.innerHTML="";
+
+  const query=
+    document
+      .getElementById("search")
+      .value
+      .trim()
+      .toLowerCase();
+
+  chats
+    .filter(chat=>
+      !query ||
+      chat.title
+        .toLowerCase()
+        .includes(query)
+    )
+    .forEach(chat=>{
+
+      const row=
+        document.createElement("div");
+
+      row.className="chat-row";
+
+      if(chat.id===currentChat){
+
+        row.classList.add("active");
       }
 
+      const icon=
+        document.createElement("span");
+
+      icon.textContent="💬";
+
+      const title=
+        document.createElement("span");
+
+      title.className="chat-title";
+      title.textContent=chat.title;
+
+      const menu=
+        document.createElement("button");
+
+      menu.className="chat-menu";
+      menu.textContent="•••";
+
+      menu.onclick=event=>{
+
+        event.stopPropagation();
+
+        chatActions(chat.id);
+      };
+
+      row.onclick=()=>
+        openChat(chat.id);
+
+      row.appendChild(icon);
+      row.appendChild(title);
+      row.appendChild(menu);
+
+      historyBox.appendChild(row);
+    });
+}
+
+
+/* =================================================
+   OPEN CHAT
+================================================= */
+
+function openChat(id){
+
+  const chat=
+    chats.find(c=>c.id===id);
+
+  if(!chat){
+    return;
+  }
+
+  currentChat=id;
+
+  conversation=
+    chat.messages.map(m=>({
+      role:m.role,
+      content:m.content
+    }));
+
+  messages.innerHTML="";
+  welcome.style.display="none";
+  messages.style.display="block";
+
+  chat.messages.forEach(m=>{
+    createMessage(
+      m.role,
+      m.content
+    );
+  });
+
+  renderHistory();
+  closeSidebar();
+}
+
+
+/* =================================================
+   CHAT ACTIONS
+================================================= */
+
+function chatActions(id){
+
+  const chat=
+    chats.find(c=>c.id===id);
+
+  if(!chat){
+    return;
+  }
+
+  const choice=
+    prompt(
+      "Type:\nrename = Rename chat\ndelete = Delete chat"
+    );
+
+  if(
+    choice?.toLowerCase()==="rename"
+  ){
+
+    const title=
+      prompt(
+        "New chat name:",
+        chat.title
+      );
+
+    if(title?.trim()){
+
+      chat.title=title.trim();
 
       saveChats();
       renderHistory();
-
-      removeFile();
-
-    } catch (error) {
-
-      assistant.content.innerHTML =
-        `<span class="error">
-          ${escapeHtml(
-            error?.message ||
-            "Sorry, something went wrong."
-          )}
-        </span>`;
-
-    } finally {
-
-      sending = false;
-      sendBtn.disabled = false;
-
-      input.focus();
-
-      scrollBottom();
     }
   }
 
+  if(
+    choice?.toLowerCase()==="delete"
+  ){
 
-  /* =====================================================
-     ADD MESSAGE
-  ===================================================== */
-
-  function addMessage(
-    role,
-    text
-  ) {
-
-    const wrapper =
-      document.createElement(
-        "div"
+    chats=
+      chats.filter(
+        c=>c.id!==id
       );
 
-    wrapper.className =
-      `message ${role}`;
+    saveChats();
 
-    const avatar =
-      document.createElement(
-        "div"
-      );
-
-    avatar.className =
-      "avatar";
-
-    avatar.textContent =
-      role === "user"
-        ? "U"
-        : "N";
-
-
-    const body =
-      document.createElement(
-        "div"
-      );
-
-    body.className =
-      "message-body";
-
-
-    const roleLabel =
-      document.createElement(
-        "div"
-      );
-
-    roleLabel.className =
-      "message-role";
-
-    roleLabel.textContent =
-      role === "user"
-        ? "You"
-        : "Nexora AI";
-
-
-    const content =
-      document.createElement(
-        "div"
-      );
-
-    content.className =
-      "message-content";
-
-    content.textContent =
-      text || "";
-
-
-    body.appendChild(
-      roleLabel
-    );
-
-    body.appendChild(
-      content
-    );
-
-    wrapper.appendChild(
-      avatar
-    );
-
-    wrapper.appendChild(
-      body
-    );
-
-    messages.appendChild(
-      wrapper
-    );
-
-
-    return {
-      wrapper,
-      content
-    };
-  }
-
-
-  /* =====================================================
-     MARKDOWN-LIKE RENDER
-  ===================================================== */
-
-  function renderAnswer(
-    element,
-    text
-  ) {
-
-    element.innerHTML = "";
-
-    const parts =
-      text.split(
-        /```([\s\S]*?)```/g
-      );
-
-
-    for (
-      let i = 0;
-      i < parts.length;
-      i++
-    ) {
-
-      if (i % 2 === 1) {
-
-        const pre =
-          document.createElement(
-            "pre"
-          );
-
-        pre.className =
-          "code-block";
-
-        pre.textContent =
-          parts[i];
-
-        element.appendChild(
-          pre
-        );
-
-      } else {
-
-        const div =
-          document.createElement(
-            "div"
-          );
-
-        div.textContent =
-          parts[i];
-
-        element.appendChild(
-          div
-        );
-      }
-    }
-  }
-
-
-  /* =====================================================
-     IMAGE GENERATION
-  ===================================================== */
-
-  async function generateImage(
-    prompt
-  ) {
-
-    if (sending) return;
-
-    sending = true;
-    sendBtn.disabled = true;
-
-
-    const welcome =
-      document.getElementById(
-        "welcome"
-      );
-
-    if (welcome) {
-      welcome.remove();
+    if(currentChat===id){
+      newChat();
     }
 
-
-    addMessage(
-      "user",
-      prompt
-    );
+    renderHistory();
+  }
+}
 
 
-    const assistant =
-      addMessage(
-        "assistant",
-        ""
-      );
+/* =================================================
+   COPY
+================================================= */
+
+async function copyText(text){
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    toast("Copied");
+
+  }catch{
+
+    toast("Copy failed");
+  }
+}
 
 
-    assistant.content.innerHTML =
-      `
-        <div class="typing">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      `;
+/* =================================================
+   SETTINGS
+================================================= */
+
+function openSettings(){
+
+  document
+    .getElementById("settingsModal")
+    .classList.add("show");
+}
+
+function closeSettings(event){
+
+  if(
+    event &&
+    event.target!==event.currentTarget
+  ){
+    return;
+  }
+
+  document
+    .getElementById("settingsModal")
+    .classList.remove("show");
+}
+
+function changeModel(){
+
+  selectedModel=
+    document.getElementById(
+      "modelSelect"
+    ).value;
+
+  document.getElementById(
+    "headerModel"
+  ).textContent=
+    selectedModel
+      .replace("gemini-","Gemini ")
+      .replace("-"," ");
+
+  localStorage.setItem(
+    "nexora_model",
+    selectedModel
+  );
+
+  toast(
+    "Model selected"
+  );
+}
 
 
-    input.value = "";
+/* =================================================
+   CLEAR HISTORY
+================================================= */
+
+function clearHistory(){
+
+  if(
+    !confirm(
+      "Delete all chat history?"
+    )
+  ){
+    return;
+  }
+
+  chats=[];
+
+  saveChats();
+
+  newChat();
+
+  closeSettings();
+
+  toast(
+    "Chat history deleted"
+  );
+}
 
 
-    try {
+/* =================================================
+   MOBILE
+================================================= */
 
-      const response =
-        await fetch(
-          "/api/generate-image",
-          {
-            method: "POST",
+function openSidebar(){
 
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
+  document
+    .getElementById("sidebar")
+    .classList.add("open");
 
-            body:
-              JSON.stringify({
-                prompt,
-                aspectRatio:
-                  "1:1",
-                imageSize:
-                  "1K"
-              })
-          }
-        );
+  document
+    .getElementById("overlay")
+    .classList.add("open");
+}
 
+function closeSidebar(){
 
-      const raw =
-        await response.text();
+  document
+    .getElementById("sidebar")
+    .classList.remove("open");
+
+  document
+    .getElementById("overlay")
+    .classList.remove("open");
+}
 
 
-      let data;
+/* =================================================
+   SUGGESTION
+================================================= */
 
-      try {
-        data =
-          JSON.parse(raw);
-      } catch {
-        throw new Error(
-          "Image API returned invalid response."
-        );
-      }
+function suggest(text){
 
+  setMode("chat");
 
-      if (!response.ok) {
-        throw new Error(
-          data?.error ||
-          `Image API error ${response.status}`
-        );
-      }
+  input.value=text;
+
+  resizeInput();
+
+  input.focus();
+}
 
 
-      if (!data?.success) {
-        throw new Error(
-          data?.error ||
-          "Image generation failed."
-        );
-      }
+/* =================================================
+   TEXTAREA
+================================================= */
 
+function resizeInput(){
 
-      const imageUrl =
-        data?.imageUrl ||
-        data?.image;
+  input.style.height="auto";
 
+  input.style.height=
+    Math.min(
+      input.scrollHeight,
+      170
+    )+"px";
+}
 
-      if (!imageUrl) {
-        throw new Error(
-          "No image was returned."
-        );
-      }
+input.addEventListener(
+  "input",
+  resizeInput
+);
 
+input.addEventListener(
+  "keydown",
+  event=>{
 
-      assistant.content.innerHTML = "";
+    if(
+      event.key==="Enter" &&
+      !event.shiftKey
+    ){
 
+      event.preventDefault();
 
-      const img =
-        document.createElement(
-          "img"
-        );
-
-      img.className =
-        "image-result";
-
-      img.src =
-        imageUrl;
-
-      img.alt =
-        prompt;
-
-
-      assistant.content.appendChild(
-        img
-      );
-
-
-      const download =
-        document.createElement(
-          "button"
-        );
-
-      download.className =
-        "download-btn";
-
-      download.textContent =
-        "Save Image";
-
-
-      download.onclick =
-        () => {
-
-          const a =
-            document.createElement(
-              "a"
-            );
-
-          a.href =
-            imageUrl;
-
-          a.download =
-            "nexora-ai-image.png";
-
-          a.click();
-        };
-
-
-      assistant.content.appendChild(
-        download
-      );
-
-
-    } catch (error) {
-
-      assistant.content.innerHTML =
-        `<span class="error">
-          ${escapeHtml(
-            error?.message ||
-            "Image generation failed."
-          )}
-        </span>`;
-
-    } finally {
-
-      sending = false;
-      sendBtn.disabled = false;
-
-      imageMode = false;
-
-      input.placeholder =
-        "Message Nexora AI...";
-
-      input.focus();
-
-      scrollBottom();
+      sendMessage();
     }
   }
+);
 
 
-  /* =====================================================
-     HISTORY
-  ===================================================== */
+/* =================================================
+   FORM
+================================================= */
 
-  function renderHistory() {
+document
+  .getElementById("composer")
+  .addEventListener(
+    "submit",
+    event=>{
 
-    historyEl.innerHTML = "";
+      event.preventDefault();
 
-    chats.forEach(
-      chatItem => {
-
-        const button =
-          document.createElement(
-            "button"
-          );
-
-        button.className =
-          "history-item";
-
-        button.textContent =
-          chatItem.title ||
-          "New Chat";
-
-
-        button.onclick =
-          () => loadChat(
-            chatItem.id
-          );
-
-
-        historyEl.appendChild(
-          button
-        );
-      }
-    );
-  }
-
-
-  function loadChat(id) {
-
-    const item =
-      chats.find(
-        c =>
-          c.id === id
-      );
-
-    if (!item) return;
-
-    currentChat =
-      id;
-
-    conversation =
-      item.messages.map(
-        message => ({
-          role:
-            message.role,
-          content:
-            message.content
-        })
-      );
-
-
-    messages.innerHTML =
-      "";
-
-
-    conversation.forEach(
-      message => {
-
-        const result =
-          addMessage(
-            message.role,
-            message.content
-          );
-
-        if (
-          message.role ===
-          "assistant"
-        ) {
-          renderAnswer(
-            result.content,
-            message.content
-          );
-        }
-      }
-    );
-
-
-    scrollBottom();
-
-
-    if (
-      window.innerWidth <= 800
-    ) {
-      sidebar.classList.remove(
-        "open"
-      );
+      sendMessage();
     }
-  }
+  );
 
 
-  /* =====================================================
-     FILE BASE64
-  ===================================================== */
+/* =================================================
+   SCROLL
+================================================= */
 
-  function fileToBase64(
-    file
-  ) {
+function scrollBottom(){
 
-    return new Promise(
-      (resolve, reject) => {
-
-        const reader =
-          new FileReader();
+  chatArea.scrollTop=
+    chatArea.scrollHeight;
+}
 
 
-        reader.onload =
-          () => {
+/* =================================================
+   TOAST
+================================================= */
 
-            const result =
-              String(
-                reader.result
-              );
+let toastTimer;
 
-            const comma =
-              result.indexOf(
-                ","
-              );
+function toast(text){
 
-            resolve({
-              data:
-                comma >= 0
-                  ? result.slice(
-                      comma + 1
-                    )
-                  : result,
+  const element=
+    document.getElementById("toast");
 
-              mimeType:
-                file.type ||
-                "application/octet-stream"
-            });
-          };
+  element.textContent=text;
 
+  element.classList.add("show");
 
-        reader.onerror =
-          reject;
+  clearTimeout(toastTimer);
 
-
-        reader.readAsDataURL(
-          file
-        );
-      }
+  toastTimer=
+    setTimeout(
+      ()=>{
+        element.classList.remove("show");
+      },
+      2300
     );
-  }
+}
 
 
-  /* =====================================================
-     ESCAPE
-  ===================================================== */
+/* =================================================
+   INIT
+================================================= */
 
-  function escapeHtml(
-    value
-  ) {
+loadTheme();
+loadChats();
 
-    return String(value)
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
-  }
+selectedModel=
+  localStorage.getItem(
+    "nexora_model"
+  ) || DEFAULT_MODEL;
 
+document.getElementById(
+  "modelSelect"
+).value=selectedModel;
 
-  /* =====================================================
-     SCROLL
-  ===================================================== */
+document.getElementById(
+  "headerModel"
+).textContent=
+  selectedModel
+    .replace("gemini-","Gemini ")
+    .replace("-"," ");
 
-  function scrollBottom() {
+newChat();
 
-    requestAnimationFrame(
-      () => {
-        chat.scrollTop =
-          chat.scrollHeight;
-      }
-    );
-  }
 </script>
 
 </body>
