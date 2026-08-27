@@ -1,3596 +1,2987 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<meta name="google-site-verification" content="3wnjh065FLl7XruyuUcWRh7qmgW21won6gzBrQkdy0s">
-
-<meta name="description" content="Nexora AI — Premium AI workspace for chat, learning, coding, image generation and file analysis.">
-<meta name="robots" content="index,follow">
-<link rel="canonical" href="https://nexora-ai.novasearch.workers.dev/">
-
-<meta property="og:title" content="Nexora AI — Premium AI Assistant">
-<meta property="og:description" content="Chat, learn, code, create images and analyze files with Nexora AI.">
-<meta property="og:url" content="https://nexora-ai.novasearch.workers.dev/">
-<meta property="og:type" content="website">
-
-<meta name="theme-color" content="#050507">
-
-<title>Nexora AI — Premium AI Workspace</title>
-
-<style>
-*{
- box-sizing:border-box;
- margin:0;
- padding:0;
-}
-
-:root{
- --bg:#050507;
- --panel:#0a0a0d;
- --surface:#101014;
- --surface2:#18181d;
- --surface3:#222229;
- --border:#292930;
- --text:#f8f8fa;
- --muted:#9696a2;
- --accent:#8b5cf6;
- --accent2:#06b6d4;
- --danger:#ff5f6d;
- --success:#4ade80;
- --shadow:0 25px 80px rgba(0,0,0,.45);
-}
-
-body.light{
- --bg:#f7f7f9;
- --panel:#ffffff;
- --surface:#ffffff;
- --surface2:#f0f0f3;
- --surface3:#e4e4e8;
- --border:#dedee4;
- --text:#17171a;
- --muted:#666671;
- --shadow:0 20px 60px rgba(0,0,0,.12);
-}
-
-html,body{
- width:100%;
- height:100%;
-}
-
-body{
- overflow:hidden;
- background:var(--bg);
- color:var(--text);
- font-family:Inter,ui-sans-serif,system-ui,-apple-system,
- BlinkMacSystemFont,"Segoe UI",sans-serif;
- transition:.25s;
-}
-
-button,input,textarea,select{
- font:inherit;
-}
-
-button{
- cursor:pointer;
-}
-
-/* AUTH */
-
-.auth-screen{
- position:fixed;
- inset:0;
- z-index:1000;
- display:grid;
- place-items:center;
- padding:20px;
- background:
- radial-gradient(circle at 20% 20%,rgba(139,92,246,.16),transparent 35%),
- radial-gradient(circle at 80% 80%,rgba(6,182,212,.13),transparent 35%),
- var(--bg);
-}
-
-.auth-card{
- width:min(440px,100%);
- padding:30px;
- border:1px solid var(--border);
- border-radius:26px;
- background:rgba(10,10,13,.82);
- backdrop-filter:blur(24px);
- box-shadow:0 35px 120px rgba(0,0,0,.45);
-}
-
-body.light .auth-card{
- background:rgba(255,255,255,.88);
-}
-
-.auth-logo{
- width:64px;
- height:64px;
- border-radius:20px;
- display:grid;
- place-items:center;
- margin:auto;
- color:white;
- font-size:25px;
- font-weight:950;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
- box-shadow:0 18px 60px rgba(99,102,241,.3);
-}
-
-.auth-title{
- text-align:center;
- margin-top:18px;
- font-size:28px;
- letter-spacing:-1px;
-}
-
-.auth-subtitle{
- text-align:center;
- color:var(--muted);
- margin-top:7px;
- font-size:13px;
-}
-
-.auth-tabs{
- display:grid;
- grid-template-columns:1fr 1fr;
- gap:6px;
- margin:25px 0 20px;
- padding:4px;
- border-radius:13px;
- background:var(--surface2);
-}
-
-.auth-tab{
- border:0;
- padding:10px;
- border-radius:10px;
- background:transparent;
- color:var(--muted);
- font-weight:750;
-}
-
-.auth-tab.active{
- background:var(--surface);
- color:var(--text);
- box-shadow:0 3px 12px rgba(0,0,0,.15);
-}
-
-.form-group{
- margin-top:14px;
-}
-
-.form-label{
- display:block;
- color:var(--muted);
- font-size:12px;
- margin-bottom:7px;
-}
-
-.form-input{
- width:100%;
- height:46px;
- border:1px solid var(--border);
- border-radius:12px;
- outline:none;
- background:var(--surface);
- color:var(--text);
- padding:0 13px;
-}
-
-.form-input:focus{
- border-color:var(--accent);
- box-shadow:0 0 0 3px rgba(139,92,246,.12);
-}
-
-.auth-submit{
- width:100%;
- height:47px;
- margin-top:20px;
- border:0;
- border-radius:13px;
- color:white;
- font-weight:850;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
- box-shadow:0 12px 35px rgba(99,102,241,.25);
-}
-
-.auth-submit:disabled{
- opacity:.5;
-}
-
-.auth-error{
- min-height:18px;
- margin-top:10px;
- color:var(--danger);
- font-size:12px;
- text-align:center;
-}
-
-/* APP */
-
-.app{
- display:none;
- width:100%;
- height:100%;
-}
-
-.sidebar{
- position:fixed;
- inset:0 auto 0 0;
- width:280px;
- background:var(--panel);
- border-right:1px solid var(--border);
- z-index:100;
- display:flex;
- flex-direction:column;
- transition:.25s;
-}
-
-.brand{
- height:68px;
- padding:0 16px;
- display:flex;
- align-items:center;
- gap:11px;
-}
-
-.logo{
- width:39px;
- height:39px;
- border-radius:13px;
- display:grid;
- place-items:center;
- color:#fff;
- font-weight:950;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-.brand-name{
- font-size:19px;
- font-weight:850;
-}
-
-.brand-name span{
- background:linear-gradient(90deg,#a78bfa,#22d3ee);
- -webkit-background-clip:text;
- background-clip:text;
- color:transparent;
-}
-
-.new-chat{
- height:45px;
- margin:0 13px 11px;
- border:1px solid var(--border);
- border-radius:12px;
- background:var(--surface);
- color:var(--text);
- text-align:left;
- padding:0 14px;
- font-weight:750;
-}
-
-.new-chat:hover{
- background:var(--surface2);
-}
-
-.search-wrap{
- padding:0 13px 12px;
-}
-
-.search{
- width:100%;
- height:39px;
- border:1px solid var(--border);
- border-radius:10px;
- outline:none;
- background:var(--surface);
- color:var(--text);
- padding:0 12px;
-}
-
-.history-label{
- padding:4px 17px 8px;
- color:var(--muted);
- font-size:10px;
- font-weight:850;
- text-transform:uppercase;
- letter-spacing:1.2px;
-}
-
-.history{
- flex:1;
- overflow:auto;
- padding:0 8px;
-}
-
-.chat-row{
- width:100%;
- display:flex;
- align-items:center;
- gap:8px;
- padding:10px;
- margin-bottom:2px;
- border:0;
- border-radius:10px;
- background:transparent;
- color:var(--muted);
- text-align:left;
-}
-
-.chat-row:hover,
-.chat-row.active{
- background:var(--surface2);
- color:var(--text);
-}
-
-.chat-title{
- flex:1;
- min-width:0;
- overflow:hidden;
- white-space:nowrap;
- text-overflow:ellipsis;
- font-size:13px;
-}
-
-.chat-menu{
- opacity:0;
- border:0;
- background:transparent;
- color:var(--muted);
- padding:3px;
-}
-
-.chat-row:hover .chat-menu{
- opacity:1;
-}
-
-.sidebar-footer{
- padding:10px;
- border-top:1px solid var(--border);
-}
-
-.user-mini{
- display:flex;
- align-items:center;
- gap:10px;
- padding:9px;
- border-radius:12px;
- cursor:pointer;
-}
-
-.user-mini:hover{
- background:var(--surface2);
-}
-
-.avatar{
- width:37px;
- height:37px;
- flex:0 0 37px;
- border-radius:11px;
- display:grid;
- place-items:center;
- font-size:12px;
- font-weight:900;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
- color:#fff;
-}
-
-.user-mini-info{
- min-width:0;
- flex:1;
-}
-
-.user-mini-name{
- font-size:12px;
- font-weight:800;
- overflow:hidden;
- white-space:nowrap;
- text-overflow:ellipsis;
-}
-
-.user-mini-email{
- font-size:10px;
- color:var(--muted);
- overflow:hidden;
- white-space:nowrap;
- text-overflow:ellipsis;
-}
-
-/* MAIN */
-
-.main{
- position:absolute;
- inset:0 0 0 280px;
- display:flex;
- flex-direction:column;
-}
-
-.header{
- height:64px;
- flex-shrink:0;
- display:flex;
- align-items:center;
- padding:0 17px;
- border-bottom:1px solid var(--border);
- background:var(--bg);
- z-index:20;
-}
-
-.menu-btn{
- display:none;
- border:0;
- background:transparent;
- color:var(--text);
- font-size:22px;
- margin-right:12px;
-}
-
-.model-button{
- border:0;
- background:transparent;
- color:var(--text);
- display:flex;
- align-items:center;
- gap:8px;
- font-weight:800;
-}
-
-.status-dot{
- width:8px;
- height:8px;
- border-radius:50%;
- background:var(--success);
- box-shadow:0 0 12px var(--success);
-}
-
-.header-space{
- flex:1;
-}
-
-.icon{
- width:39px;
- height:39px;
- border:0;
- border-radius:10px;
- background:transparent;
- color:var(--muted);
- font-size:17px;
-}
-
-.icon:hover{
- background:var(--surface2);
- color:var(--text);
-}
-
-/* CHAT */
-
-.chat-area{
- flex:1;
- overflow:auto;
- scroll-behavior:smooth;
-}
-
-.welcome{
- min-height:100%;
- max-width:920px;
- margin:auto;
- padding:35px 20px 170px;
- display:flex;
- flex-direction:column;
- justify-content:center;
- align-items:center;
-}
-
-.welcome-logo{
- width:82px;
- height:82px;
- border-radius:26px;
- display:grid;
- place-items:center;
- color:white;
- font-size:31px;
- font-weight:950;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
- box-shadow:0 20px 70px rgba(99,102,241,.24);
-}
-
-.welcome h1{
- margin-top:22px;
- font-size:clamp(31px,6vw,52px);
- letter-spacing:-2.5px;
- text-align:center;
-}
-
-.welcome p{
- margin-top:8px;
- color:var(--muted);
- text-align:center;
-}
-
-.welcome-name{
- margin-top:10px;
- color:var(--muted);
- font-size:14px;
-}
-
-.cards{
- width:100%;
- display:grid;
- grid-template-columns:repeat(2,1fr);
- gap:12px;
- margin-top:34px;
-}
-
-.card{
- padding:18px;
- border:1px solid var(--border);
- border-radius:16px;
- background:var(--surface);
- color:var(--text);
- text-align:left;
- transition:.2s;
-}
-
-.card:hover{
- background:var(--surface2);
- transform:translateY(-2px);
-}
-
-.card-title{
- font-size:14px;
- font-weight:850;
-}
-
-.card-desc{
- margin-top:6px;
- color:var(--muted);
- font-size:12px;
-}
-
-/* MESSAGES */
-
-.messages{
- max-width:900px;
- width:100%;
- margin:auto;
- padding-bottom:170px;
-}
-
-.message{
- display:flex;
- gap:14px;
- padding:25px 20px;
- border-bottom:1px solid color-mix(in srgb,var(--border) 45%,transparent);
-}
-
-.message-avatar{
- width:37px;
- height:37px;
- flex:0 0 37px;
- border-radius:11px;
- display:grid;
- place-items:center;
- background:var(--surface2);
- font-size:10px;
- font-weight:850;
-}
-
-.assistant .message-avatar{
- color:#fff;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-.message-body{
- flex:1;
- min-width:0;
-}
-
-.message-name{
- color:var(--muted);
- font-size:12px;
- font-weight:750;
- margin-bottom:8px;
-}
-
-.message-text{
- font-size:15px;
- line-height:1.75;
- white-space:pre-wrap;
- overflow-wrap:anywhere;
-}
-
-.code-wrap{
- margin:12px 0;
- border:1px solid var(--border);
- border-radius:13px;
- overflow:hidden;
- background:#09090b;
-}
-
-.code-head{
- height:36px;
- padding:0 10px;
- display:flex;
- align-items:center;
- justify-content:space-between;
- background:#141418;
- border-bottom:1px solid #29292f;
- color:#aaa;
- font-size:11px;
-}
-
-.code-copy{
- border:0;
- background:#222228;
- color:#ddd;
- border-radius:7px;
- padding:5px 8px;
-}
-
-.code-content{
- padding:15px;
- overflow:auto;
- color:#eee;
- font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
- font-size:12px;
- line-height:1.65;
- white-space:pre;
-}
-
-.actions{
- display:flex;
- gap:4px;
- margin-top:9px;
-}
-
-.action{
- border:0;
- background:transparent;
- color:var(--muted);
- padding:6px 8px;
- border-radius:7px;
- font-size:12px;
-}
-
-.action:hover{
- background:var(--surface2);
- color:var(--text);
-}
-
-/* COMPOSER */
-
-.composer-zone{
- position:absolute;
- left:0;
- right:0;
- bottom:0;
- padding:14px 14px 17px;
- pointer-events:none;
- background:linear-gradient(to top,var(--bg) 65%,transparent);
-}
-
-.composer{
- max-width:900px;
- margin:auto;
- pointer-events:auto;
-}
-
-.mode-row{
- display:flex;
- justify-content:center;
- gap:6px;
- margin-bottom:8px;
-}
-
-.mode-btn{
- border:1px solid var(--border);
- background:var(--surface);
- color:var(--muted);
- border-radius:20px;
- padding:6px 12px;
- font-size:11px;
-}
-
-.mode-btn.active{
- color:var(--text);
- background:var(--surface2);
- border-color:#4b4b54;
-}
-
-.input-box{
- border:1px solid var(--border);
- background:var(--surface);
- border-radius:19px;
- padding:8px 9px 8px 13px;
- box-shadow:var(--shadow);
-}
-
-textarea{
- width:100%;
- min-height:40px;
- max-height:170px;
- resize:none;
- border:0;
- outline:0;
- background:transparent;
- color:var(--text);
- font-size:15px;
- line-height:1.5;
- padding:8px 2px;
-}
-
-.input-actions{
- display:flex;
- align-items:center;
- gap:4px;
-}
-
-.attach,
-.voice{
- width:38px;
- height:38px;
- border:0;
- border-radius:10px;
- background:transparent;
- color:var(--muted);
- font-size:17px;
-}
-
-.attach:hover,
-.voice:hover{
- background:var(--surface2);
- color:var(--text);
-}
-
-.send{
- margin-left:auto;
- width:41px;
- height:41px;
- border:0;
- border-radius:12px;
- color:white;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
- font-size:19px;
- font-weight:900;
-}
-
-.send:disabled{
- opacity:.45;
- cursor:wait;
-}
-
-.note{
- text-align:center;
- color:var(--muted);
- font-size:10px;
- opacity:.7;
- margin-top:7px;
-}
-
-/* ATTACHMENT */
-
-.attachment-preview{
- display:none;
- margin-bottom:7px;
- padding:8px 10px;
- border-radius:11px;
- background:var(--surface2);
- font-size:12px;
- color:var(--muted);
-}
-
-.attachment-preview.show{
- display:flex;
- align-items:center;
- gap:8px;
-}
-
-.preview-thumb{
- width:30px;
- height:30px;
- border-radius:7px;
- object-fit:cover;
- display:none;
-}
-
-.remove-file{
- margin-left:auto;
- border:0;
- background:transparent;
- color:var(--muted);
- font-size:18px;
-}
-
-/* MODALS */
-
-.backdrop{
- position:fixed;
- inset:0;
- display:none;
- place-items:center;
- background:rgba(0,0,0,.65);
- backdrop-filter:blur(9px);
- z-index:500;
-}
-
-.backdrop.show{
- display:grid;
-}
-
-.modal{
- width:min(500px,calc(100% - 28px));
- max-height:90vh;
- overflow:auto;
- background:var(--panel);
- border:1px solid var(--border);
- border-radius:22px;
- padding:22px;
- box-shadow:0 30px 100px rgba(0,0,0,.5);
-}
-
-.modal-head{
- display:flex;
- align-items:center;
- justify-content:space-between;
-}
-
-.modal h2{
- font-size:20px;
-}
-
-.close{
- border:0;
- background:transparent;
- color:var(--muted);
- font-size:22px;
-}
-
-.setting{
- margin-top:20px;
-}
-
-.setting-label{
- display:block;
- color:var(--muted);
- font-size:12px;
- margin-bottom:8px;
-}
-
-.select,
-.setting-btn{
- width:100%;
- min-height:44px;
- border:1px solid var(--border);
- border-radius:11px;
- background:var(--surface);
- color:var(--text);
- padding:0 11px;
- outline:0;
-}
-
-.setting-btn{
- text-align:left;
-}
-
-.setting-btn:hover{
- background:var(--surface2);
-}
-
-.theme-row{
- display:flex;
- gap:8px;
-}
-
-.theme-btn{
- flex:1;
- height:43px;
- border:1px solid var(--border);
- border-radius:11px;
- background:var(--surface);
- color:var(--text);
-}
-
-.profile-card{
- display:flex;
- align-items:center;
- gap:14px;
- padding:16px;
- border:1px solid var(--border);
- border-radius:15px;
- background:var(--surface);
- margin-top:18px;
-}
-
-.profile-avatar{
- width:62px;
- height:62px;
- border-radius:19px;
- display:grid;
- place-items:center;
- color:#fff;
- font-size:21px;
- font-weight:950;
- background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-.profile-info{
- min-width:0;
-}
-
-.profile-name{
- font-size:17px;
- font-weight:850;
-}
-
-.profile-email{
- margin-top:4px;
- color:var(--muted);
- font-size:12px;
- overflow-wrap:anywhere;
-}
-
-.danger{
- color:var(--danger)!important;
-}
-
-/* TOAST */
-
-.toast{
- position:fixed;
- left:50%;
- bottom:96px;
- transform:translate(-50%,15px);
- opacity:0;
- pointer-events:none;
- background:var(--surface3);
- border:1px solid var(--border);
- color:var(--text);
- padding:10px 16px;
- border-radius:11px;
- font-size:12px;
- transition:.2s;
- z-index:800;
-}
-
-.toast.show{
- opacity:1;
- transform:translate(-50%,0);
-}
-
-/* MOBILE */
-
-.overlay{
- display:none;
- position:fixed;
- inset:0;
- background:rgba(0,0,0,.55);
- z-index:90;
-}
-
-@media(max-width:760px){
-
- .sidebar{
-  transform:translateX(-100%);
- }
-
- .sidebar.open{
-  transform:translateX(0);
- }
-
- .overlay.open{
-  display:block;
- }
-
- .main{
-  left:0;
- }
-
- .menu-btn{
-  display:block;
- }
-
- .cards{
-  grid-template-columns:1fr;
- }
-
- .message{
-  padding:20px 14px;
- }
-
- .composer-zone{
-  padding-left:7px;
-  padding-right:7px;
- }
-
- .welcome{
-  padding-left:15px;
-  padding-right:15px;
- }
-
- .auth-card{
-  padding:24px;
- }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Search Console Verification -->
+  <meta name="google-site-verification" content="3wnjh065FLl7XruyuUcWRh7qmgW21won6gzBrQkdy0s">
+
+  <!-- Premium SEO -->
+  <title>Nexora AI — Premium AI Assistant</title>
+  <meta name="description" content="Nexora AI is a modern AI assistant for chatting, learning, coding, image generation, file analysis and creative tasks.">
+  <meta name="keywords" content="Nexora AI, AI assistant, AI chat, Gemini AI, AI image generator, coding AI, study AI">
+  <meta name="author" content="Nexora AI">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#07070a">
+  <link rel="canonical" href="https://nexora-ai.novasearch.workers.dev/">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Nexora AI — Premium AI Assistant">
+  <meta property="og:description" content="Chat, learn, code, analyze files and create images with Nexora AI.">
+  <meta property="og:url" content="https://nexora-ai.novasearch.workers.dev/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Nexora AI">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Nexora AI — Premium AI Assistant">
+  <meta name="twitter:description" content="Your intelligent AI workspace for chat, coding, learning and creativity.">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #07070a;
+      --panel: #0d0d11;
+      --surface: #121217;
+      --surface2: #1a1a20;
+      --surface3: #23232a;
+      --border: #292930;
+      --text: #f7f7fa;
+      --muted: #9696a3;
+      --accent: #8b5cf6;
+      --accent2: #06b6d4;
+      --success: #4ade80;
+      --danger: #ff6574;
+      --shadow: 0 25px 90px rgba(0,0,0,.42);
+    }
+
+    body.light {
+      --bg: #f7f7fa;
+      --panel: #ffffff;
+      --surface: #ffffff;
+      --surface2: #eeeeF2;
+      --surface3: #e4e4e9;
+      --border: #dcdce3;
+      --text: #151519;
+      --muted: #686873;
+      --shadow: 0 20px 70px rgba(0,0,0,.13);
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      transition: background .25s, color .25s;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* =========================
+       SIDEBAR
+    ========================= */
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 285px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform .28s ease;
+    }
+
+    .brand {
+      height: 70px;
+      padding: 0 17px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 950;
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+      box-shadow:
+        0 9px 35px rgba(99,102,241,.28),
+        inset 0 1px rgba(255,255,255,.3);
+    }
+
+    .brand-name {
+      font-size: 19px;
+      font-weight: 850;
+      letter-spacing: -.5px;
+    }
+
+    .brand-name span {
+      background:
+        linear-gradient(
+          90deg,
+          #a78bfa,
+          #22d3ee
+        );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .new-chat {
+      height: 46px;
+      margin: 0 13px 11px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 750;
+      text-align: left;
+      padding: 0 14px;
+      transition: .2s;
+    }
+
+    .new-chat:hover {
+      background: var(--surface2);
+      transform: translateY(-1px);
+    }
+
+    .search-wrap {
+      padding: 0 13px 12px;
+    }
+
+    .search {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 12px;
+    }
+
+    .search::placeholder {
+      color: var(--muted);
+    }
+
+    .history-label {
+      padding: 4px 17px 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+    }
+
+    .history {
+      flex: 1;
+      overflow: auto;
+      padding: 0 8px;
+    }
+
+    .chat-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      margin-bottom: 2px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .chat-row:hover,
+    .chat-row.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .chat-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+
+    .chat-menu {
+      opacity: 0;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 3px;
+    }
+
+    .chat-row:hover .chat-menu {
+      opacity: 1;
+    }
+
+    .sidebar-footer {
+      padding: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-btn {
+      width: 100%;
+      padding: 11px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .sidebar-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    .main {
+      position: absolute;
+      inset: 0 0 0 285px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 65px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 17px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(
+        in srgb,
+        var(--bg) 94%,
+        transparent
+      );
+      backdrop-filter: blur(16px);
+      z-index: 20;
+    }
+
+    .menu-btn {
+      display: none;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 22px;
+      margin-right: 12px;
+      cursor: pointer;
+    }
+
+    .model-button {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 13px var(--success);
+    }
+
+    .header-space {
+      flex: 1;
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    .icon:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* =========================
+       CHAT AREA
+    ========================= */
+
+    .chat-area {
+      flex: 1;
+      overflow: auto;
+      scroll-behavior: smooth;
+    }
+
+    .welcome {
+      min-height: 100%;
+      max-width: 930px;
+      margin: auto;
+      padding: 35px 20px 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .welcome-logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 27px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 33px;
+      font-weight: 950;
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+      box-shadow:
+        0 22px 75px rgba(99,102,241,.28),
+        inset 0 1px rgba(255,255,255,.3);
+    }
+
+    .welcome h1 {
+      margin-top: 22px;
+      font-size: clamp(32px, 6vw, 54px);
+      letter-spacing: -2.8px;
+      text-align: center;
+    }
+
+    .welcome h1 span {
+      background:
+        linear-gradient(
+          90deg,
+          #a78bfa,
+          #22d3ee
+        );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .welcome p {
+      margin-top: 9px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .cards {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .card {
+      padding: 19px;
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: .22s;
+    }
+
+    .card:hover {
+      background: var(--surface2);
+      transform: translateY(-2px);
+      border-color: color-mix(
+        in srgb,
+        var(--accent) 40%,
+        var(--border)
+      );
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .card-desc {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* =========================
+       MESSAGES
+    ========================= */
+
+    .messages {
+      max-width: 920px;
+      width: 100%;
+      margin: auto;
+      padding-bottom: 180px;
+    }
+
+    .message {
+      display: flex;
+      gap: 14px;
+      padding: 25px 20px;
+      border-bottom: 1px solid color-mix(
+        in srgb,
+        var(--border) 45%,
+        transparent
+      );
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 11px;
+      background: var(--surface2);
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .assistant .avatar {
+      color: white;
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+    }
+
+    .message-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .message-name {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .message-text {
+      font-size: 15px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message-text a {
+      color: #8b5cf6;
+    }
+
+    .code-wrap {
+      margin: 13px 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #09090b;
+    }
+
+    .code-head {
+      min-height: 38px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #151519;
+      border-bottom: 1px solid #29292f;
+      color: #aaa;
+      font-size: 11px;
+    }
+
+    .code-copy {
+      border: 0;
+      background: #24242a;
+      color: #ddd;
+      border-radius: 7px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .code-copy:hover {
+      background: #303038;
+    }
+
+    .code-content {
+      padding: 15px;
+      overflow: auto;
+      color: #eee;
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre;
+    }
+
+    .actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 9px;
+    }
+
+    .action {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 7px;
+      font-size: 12px;
+    }
+
+    .action:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* =========================
+       COMPOSER
+    ========================= */
+
+    .composer-zone {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 14px 17px;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          to top,
+          var(--bg) 65%,
+          transparent
+        );
+    }
+
+    .composer {
+      max-width: 920px;
+      margin: auto;
+      pointer-events: auto;
+    }
+
+    .mode-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .mode-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 7px 13px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: .18s;
+    }
+
+    .mode-btn:hover {
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .mode-btn.active {
+      color: var(--text);
+      background: var(--surface2);
+      border-color: #4b4b54;
+    }
+
+    .input-box {
+      border: 1px solid var(--border);
+      background: color-mix(
+        in srgb,
+        var(--surface) 96%,
+        transparent
+      );
+      border-radius: 20px;
+      padding: 8px 9px 8px 13px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 40px;
+      max-height: 170px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      padding: 8px 2px;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+    }
+
+    .input-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .attach,
+    .voice {
+      width: 39px;
+      height: 39px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    .attach:hover,
+    .voice:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .send {
+      margin-left: auto;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 13px;
+      color: white;
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+      cursor: pointer;
+      font-size: 19px;
+      font-weight: 950;
+      box-shadow: 0 7px 25px rgba(99,102,241,.22);
+    }
+
+    .send:hover {
+      transform: translateY(-1px);
+    }
+
+    .send:disabled {
+      opacity: .45;
+      cursor: wait;
+      transform: none;
+    }
+
+    .note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 10px;
+      opacity: .7;
+      margin-top: 7px;
+    }
+
+    /* =========================
+       ATTACHMENT
+    ========================= */
+
+    .attachment-preview {
+      display: none;
+      margin-bottom: 7px;
+      padding: 8px 10px;
+      border-radius: 11px;
+      background: var(--surface2);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .attachment-preview.show {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .preview-thumb {
+      width: 31px;
+      height: 31px;
+      border-radius: 7px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .remove-file {
+      margin-left: auto;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 19px;
+    }
+
+    /* =========================
+       TYPING
+    ========================= */
+
+    .typing {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 0;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: bounce 1.1s infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes bounce {
+      0%,60%,100% {
+        transform: translateY(0);
+      }
+      30% {
+        transform: translateY(-4px);
+      }
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(9px);
+      z-index: 300;
+    }
+
+    .backdrop.show {
+      display: grid;
+    }
+
+    .modal {
+      width: min(470px, calc(100% - 28px));
+      max-height: 90vh;
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 21px;
+      padding: 22px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.55);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      letter-spacing: -.4px;
+    }
+
+    .close {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 23px;
+    }
+
+    .setting {
+      margin-top: 21px;
+    }
+
+    .setting-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .theme-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      height: 43px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .theme-btn:hover {
+      background: var(--surface2);
+    }
+
+    .select,
+    .setting-btn {
+      width: 100%;
+      height: 43px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 11px;
+      outline: 0;
+    }
+
+    .setting-btn {
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .setting-btn:hover {
+      background: var(--surface2);
+    }
+
+    .about-box {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 13px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      background: var(--surface);
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translate(-50%,15px);
+      opacity: 0;
+      pointer-events: none;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 11px;
+      font-size: 12px;
+      transition: .2s;
+      z-index: 500;
+      box-shadow: 0 15px 40px rgba(0,0,0,.25);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%,0);
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.58);
+      z-index: 90;
+    }
+
+    @media(max-width:760px) {
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .overlay.open {
+        display: block;
+      }
+
+      .main {
+        left: 0;
+      }
+
+      .menu-btn {
+        display: block;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .message {
+        padding: 20px 14px;
+      }
+
+      .composer-zone {
+        padding-left: 7px;
+        padding-right: 7px;
+      }
+
+      .welcome {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+
+      .welcome h1 {
+        letter-spacing: -1.8px;
+      }
+
+      .mode-btn {
+        padding: 6px 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- AUTH SCREEN -->
+  <!-- =========================
+       SIDEBAR
+  ========================= -->
 
-<div class="auth-screen" id="authScreen">
+  <aside class="sidebar" id="sidebar">
 
- <div class="auth-card">
+    <div class="brand">
+      <div class="logo">N</div>
 
-  <div class="auth-logo">N</div>
-
-  <h1 class="auth-title">Nexora AI</h1>
-
-  <p class="auth-subtitle">
-   Your premium intelligent workspace
-  </p>
-
-  <div class="auth-tabs">
-
-   <button
-    class="auth-tab active"
-    id="loginTab"
-    onclick="showAuth('login')">
-    Login
-   </button>
-
-   <button
-    class="auth-tab"
-    id="signupTab"
-    onclick="showAuth('signup')">
-    Sign up
-   </button>
-
-  </div>
-
-  <form id="authForm">
-
-   <div
-    class="form-group"
-    id="nameGroup"
-    style="display:none">
-
-    <label class="form-label">
-     Your name
-    </label>
-
-    <input
-     class="form-input"
-     id="authName"
-     autocomplete="name"
-     placeholder="Enter your name">
-
-   </div>
-
-   <div class="form-group">
-
-    <label class="form-label">
-     Email
-    </label>
-
-    <input
-     class="form-input"
-     id="authEmail"
-     type="email"
-     autocomplete="email"
-     placeholder="you@example.com"
-     required>
-
-   </div>
-
-   <div class="form-group">
-
-    <label class="form-label">
-     Password
-    </label>
-
-    <input
-     class="form-input"
-     id="authPassword"
-     type="password"
-     autocomplete="current-password"
-     placeholder="Enter your password"
-     required>
-
-   </div>
-
-   <button
-    class="auth-submit"
-    id="authSubmit"
-    type="submit">
-
-    Login to Nexora
-
-   </button>
-
-   <div
-    class="auth-error"
-    id="authError">
-   </div>
-
-  </form>
-
- </div>
-
-</div>
-
-
-<!-- APP -->
-
-<div class="app" id="app">
-
- <aside class="sidebar" id="sidebar">
-
-  <div class="brand">
-
-   <div class="logo">N</div>
-
-   <div class="brand-name">
-    <span>Nexora</span> AI
-   </div>
-
-  </div>
-
-  <button
-   class="new-chat"
-   onclick="newChat()">
-
-   ＋ New chat
-
-  </button>
-
-  <div class="search-wrap">
-
-   <input
-    id="search"
-    class="search"
-    placeholder="Search chats..."
-    oninput="renderHistory()">
-
-  </div>
-
-  <div class="history-label">
-   Chats
-  </div>
-
-  <div
-   class="history"
-   id="history">
-  </div>
-
-  <div class="sidebar-footer">
-
-   <div
-    class="user-mini"
-    onclick="openProfile()">
-
-    <div
-     class="avatar"
-     id="miniAvatar">
-     N
+      <div class="brand-name">
+        <span>Nexora</span> AI
+      </div>
     </div>
 
-    <div class="user-mini-info">
-
-     <div
-      class="user-mini-name"
-      id="miniName">
-      User
-     </div>
-
-     <div
-      class="user-mini-email"
-      id="miniEmail">
-      Account
-     </div>
-
-    </div>
-
-    <span>›</span>
-
-   </div>
-
-  </div>
-
- </aside>
-
-
- <div
-  class="overlay"
-  id="overlay"
-  onclick="closeSidebar()">
- </div>
-
-
- <main class="main">
-
-  <header class="header">
-
-   <button
-    class="menu-btn"
-    onclick="openSidebar()">
-    ☰
-   </button>
-
-   <button
-    class="model-button"
-    onclick="openSettings()">
-
-    <span class="status-dot"></span>
-
-    <span id="headerModel">
-     Nexora AI
-    </span>
-
-    ▾
-
-   </button>
-
-   <div class="header-space"></div>
-
-   <button
-    class="icon"
-    onclick="toggleTheme()"
-    title="Theme">
-
-    <span id="themeIcon">☾</span>
-
-   </button>
-
-   <button
-    class="icon"
-    onclick="openProfile()"
-    title="Profile">
-
-    👤
-
-   </button>
-
-  </header>
-
-
-  <div
-   class="chat-area"
-   id="chatArea">
-
-   <section
-    class="welcome"
-    id="welcome">
-
-    <div class="welcome-logo">
-     N
-    </div>
-
-    <h1>
-     Welcome, <span id="welcomeName">there</span>
-    </h1>
-
-    <p>
-     What can I help you with today?
-    </p>
-
-    <div class="cards">
-
-     <button
-      class="card"
-      onclick="suggest('Explain photosynthesis in simple words')">
-
-      <div class="card-title">
-       📚 Learn
-      </div>
-
-      <div class="card-desc">
-       Understand difficult topics clearly
-      </div>
-
-     </button>
-
-     <button
-      class="card"
-      onclick="suggest('Create a modern website idea for me')">
-
-      <div class="card-title">
-       💡 Brainstorm
-      </div>
-
-      <div class="card-desc">
-       Generate creative and useful ideas
-      </div>
-
-     </button>
-
-     <button
-      class="card"
-      onclick="suggest('Write a professional introduction for my project')">
-
-      <div class="card-title">
-       ✍️ Write
-      </div>
-
-      <div class="card-desc">
-       Create polished original content
-      </div>
-
-     </button>
-
-     <button
-      class="card"
-      onclick="activateImageMode()">
-
-      <div class="card-title">
-       🎨 Create image
-      </div>
-
-      <div class="card-desc">
-       Generate an image from your idea
-      </div>
-
-     </button>
-
-    </div>
-
-   </section>
-
-
-   <div
-    class="messages"
-    id="messages">
-   </div>
-
-  </div>
-
-
-  <div class="composer-zone">
-
-   <form
-    class="composer"
-    id="composer">
-
-    <div class="mode-row">
-
-     <button
-      type="button"
-      class="mode-btn active"
-      id="chatMode"
-      onclick="setMode('chat')">
-      💬 Chat
-     </button>
-
-     <button
-      type="button"
-      class="mode-btn"
-      id="imageMode"
-      onclick="setMode('image')">
-      🎨 Image
-     </button>
-
-     <button
-      type="button"
-      class="mode-btn"
-      id="codeMode"
-      onclick="setMode('code')">
-      💻 Code
-     </button>
-
-    </div>
-
-
-    <div
-     class="attachment-preview"
-     id="attachmentPreview">
-
-     <img
-      class="preview-thumb"
-      id="previewThumb">
-
-     <span id="attachmentName"></span>
-
-     <button
-      type="button"
-      class="remove-file"
-      onclick="removeFile()">
-      ×
-     </button>
-
-    </div>
-
-
-    <div class="input-box">
-
-     <textarea
-      id="message"
-      rows="1"
-      placeholder="Message Nexora AI...">
-     </textarea>
-
-     <div class="input-actions">
-
-      <button
-       type="button"
-       class="attach"
-       onclick="document.getElementById('file').click()">
-       ＋
-      </button>
-
+    <button
+      class="new-chat"
+      onclick="newChat()">
+      ＋ New chat
+    </button>
+
+    <div class="search-wrap">
       <input
-       id="file"
-       type="file"
-       hidden
-       accept="image/*,.txt,.pdf,.doc,.docx"
-       onchange="fileSelected(this)">
-
-      <button
-       type="button"
-       class="voice"
-       onclick="startVoice()">
-       🎙
-      </button>
-
-      <button
-       type="submit"
-       class="send"
-       id="send">
-       ↑
-      </button>
-
-     </div>
-
+        id="search"
+        class="search"
+        placeholder="Search chats..."
+        oninput="renderHistory()"
+        autocomplete="off">
     </div>
 
-    <div class="note">
-     Nexora AI can make mistakes. Check important information.
-    </div>
-
-   </form>
-
-  </div>
-
- </main>
-
-</div>
-
-
-<!-- PROFILE -->
-
-<div
- class="backdrop"
- id="profileModal"
- onclick="closeProfile(event)">
-
- <div
-  class="modal"
-  onclick="event.stopPropagation()">
-
-  <div class="modal-head">
-
-   <h2>Your Profile</h2>
-
-   <button
-    class="close"
-    onclick="closeProfile()">
-    ×
-   </button>
-
-  </div>
-
-
-  <div class="profile-card">
-
-   <div
-    class="profile-avatar"
-    id="profileAvatar">
-    N
-   </div>
-
-   <div class="profile-info">
-
-    <div
-     class="profile-name"
-     id="profileName">
-     User
+    <div class="history-label">
+      Chats
     </div>
 
     <div
-     class="profile-email"
-     id="profileEmail">
-     email
+      class="history"
+      id="history">
     </div>
 
-   </div>
+    <div class="sidebar-footer">
+      <button
+        class="sidebar-btn"
+        onclick="openSettings()">
+        ⚙️ Settings
+      </button>
+    </div>
+
+  </aside>
+
+  <div
+    class="overlay"
+    id="overlay"
+    onclick="closeSidebar()">
+  </div>
+
+  <!-- =========================
+       MAIN
+  ========================= -->
+
+  <main class="main">
+
+    <header class="header">
+
+      <button
+        class="menu-btn"
+        onclick="openSidebar()">
+        ☰
+      </button>
+
+      <button
+        class="model-button"
+        onclick="openSettings()">
+
+        <span class="status-dot"></span>
+
+        <span id="headerModel">
+          Gemini 3.6 Flash
+        </span>
+
+        ▾
+      </button>
+
+      <div class="header-space"></div>
+
+      <button
+        class="icon"
+        onclick="toggleTheme()"
+        title="Toggle theme">
+
+        <span id="themeIcon">
+          ☾
+        </span>
+
+      </button>
+
+      <button
+        class="icon"
+        onclick="openSettings()"
+        title="Settings">
+        ⚙
+      </button>
+
+    </header>
+
+    <div
+      class="chat-area"
+      id="chatArea">
+
+      <!-- WELCOME -->
+
+      <section
+        class="welcome"
+        id="welcome">
+
+        <div class="welcome-logo">
+          N
+        </div>
+
+        <h1>
+          What can I <span>help with?</span>
+        </h1>
+
+        <p>
+          Your premium intelligent workspace powered by Nexora AI
+        </p>
+
+        <div class="cards">
+
+          <button
+            class="card"
+            onclick="suggest('Explain photosynthesis in simple words')">
+
+            <div class="card-title">
+              📚 Learn
+            </div>
+
+            <div class="card-desc">
+              Understand difficult topics clearly and step by step.
+            </div>
+
+          </button>
+
+          <button
+            class="card"
+            onclick="suggest('Create a modern website idea for me')">
+
+            <div class="card-title">
+              💡 Brainstorm
+            </div>
+
+            <div class="card-desc">
+              Generate creative and useful ideas for your projects.
+            </div>
+
+          </button>
+
+          <button
+            class="card"
+            onclick="suggest('Write a professional introduction for my project')">
+
+            <div class="card-title">
+              ✍️ Write
+            </div>
+
+            <div class="card-desc">
+              Create polished and original content.
+            </div>
+
+          </button>
+
+          <button
+            class="card"
+            onclick="activateImageMode()">
+
+            <div class="card-title">
+              🎨 Create image
+            </div>
+
+            <div class="card-desc">
+              Turn your imagination into an image.
+            </div>
+
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- MESSAGES -->
+
+      <div
+        class="messages"
+        id="messages">
+      </div>
+
+    </div>
+
+    <!-- =========================
+         COMPOSER
+    ========================= -->
+
+    <div class="composer-zone">
+
+      <form
+        class="composer"
+        id="composer">
+
+        <div class="mode-row">
+
+          <button
+            type="button"
+            class="mode-btn active"
+            id="chatMode"
+            onclick="setMode('chat')">
+            💬 Chat
+          </button>
+
+          <button
+            type="button"
+            class="mode-btn"
+            id="imageMode"
+            onclick="setMode('image')">
+            🎨 Image
+          </button>
+
+          <button
+            type="button"
+            class="mode-btn"
+            id="codeMode"
+            onclick="setMode('code')">
+            💻 Code
+          </button>
+
+        </div>
+
+        <div
+          class="attachment-preview"
+          id="attachmentPreview">
+
+          <img
+            class="preview-thumb"
+            id="previewThumb"
+            alt="">
+
+          <span id="attachmentName"></span>
+
+          <button
+            type="button"
+            class="remove-file"
+            onclick="removeFile()">
+            ×
+          </button>
+
+        </div>
+
+        <div class="input-box">
+
+          <textarea
+            id="message"
+            rows="1"
+            placeholder="Message Nexora AI..."
+            autocomplete="off"></textarea>
+
+          <div class="input-actions">
+
+            <button
+              type="button"
+              class="attach"
+              onclick="document.getElementById('file').click()"
+              title="Attach file">
+              ＋
+            </button>
+
+            <input
+              id="file"
+              type="file"
+              hidden
+              accept="image/*,.txt,.csv,.json,.html,.css,.js,.xml,.pdf,.docx"
+              onchange="fileSelected(this)">
+
+            <button
+              type="button"
+              class="voice"
+              onclick="startVoice()"
+              title="Voice input">
+              🎙
+            </button>
+
+            <button
+              type="submit"
+              class="send"
+              id="send">
+              ↑
+            </button>
+
+          </div>
+
+        </div>
+
+        <div class="note">
+          Nexora AI can make mistakes. Check important information.
+        </div>
+
+      </form>
+
+    </div>
+
+  </main>
+
+  <!-- =========================
+       SETTINGS
+  ========================= -->
+
+  <div
+    class="backdrop"
+    id="settingsModal"
+    onclick="closeSettings(event)">
+
+    <div
+      class="modal"
+      onclick="event.stopPropagation()">
+
+      <div class="modal-head">
+
+        <h2>
+          Nexora Settings
+        </h2>
+
+        <button
+          class="close"
+          onclick="closeSettings()">
+          ×
+        </button>
+
+      </div>
+
+      <div class="setting">
+
+        <span class="setting-label">
+          Appearance
+        </span>
+
+        <div class="theme-row">
+
+          <button
+            class="theme-btn"
+            onclick="setTheme('light')">
+            ☀ Light
+          </button>
+
+          <button
+            class="theme-btn"
+            onclick="setTheme('dark')">
+            ☾ Dark
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="setting">
+
+        <span class="setting-label">
+          AI Model
+        </span>
+
+        <select
+          class="select"
+          id="modelSelect"
+          onchange="changeModel()">
+
+          <option value="gemini-3.6-flash">
+            Gemini 3.6 Flash
+          </option>
+
+        </select>
+
+      </div>
+
+      <div class="setting">
+
+        <span class="setting-label">
+          Chat history
+        </span>
+
+        <button
+          class="setting-btn"
+          onclick="clearHistory()">
+          🗑 Delete all chat history
+        </button>
+
+      </div>
+
+      <div class="setting">
+
+        <span class="setting-label">
+          About Nexora AI
+        </span>
+
+        <div class="about-box">
+          <strong>Nexora AI</strong><br>
+          Premium AI workspace for chat, learning,
+          coding, image generation and file analysis.
+          <br><br>
+          Powered by Gemini API.
+        </div>
+
+      </div>
+
+    </div>
 
   </div>
 
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Display name
-   </span>
-
-   <input
-    class="form-input"
-    id="profileNameInput"
-    placeholder="Your name">
-
-   <button
-    class="setting-btn"
-    style="margin-top:8px"
-    onclick="updateProfile()">
-    Save name
-   </button>
-
+  <div
+    class="toast"
+    id="toast">
   </div>
 
+  <script>
+    /* ==================================================
+       API
+    ================================================== */
 
-  <div class="setting">
+    const API = "/api/chat";
+    const IMAGE_API = "/api/generate-image";
+    const DEFAULT_MODEL = "gemini-3.6-flash";
 
-   <span class="setting-label">
-    Account
-   </span>
+    /* ==================================================
+       STATE
+    ================================================== */
 
-   <button
-    class="setting-btn"
-    onclick="openSettings();closeProfile()">
-    ⚙ Account settings
-   </button>
+    let chats = [];
+    let currentChat = null;
+    let conversation = [];
 
-  </div>
+    let selectedFile = null;
+    let selectedImage = null;
 
+    let sending = false;
+    let currentMode = "chat";
+    let selectedModel = DEFAULT_MODEL;
 
-  <div class="setting">
+    const input =
+      document.getElementById("message");
 
-   <button
-    class="setting-btn danger"
-    onclick="logout()">
-    🚪 Logout
-   </button>
+    const send =
+      document.getElementById("send");
 
-  </div>
+    const messages =
+      document.getElementById("messages");
 
- </div>
+    const welcome =
+      document.getElementById("welcome");
 
-</div>
+    const chatArea =
+      document.getElementById("chatArea");
 
+    const historyBox =
+      document.getElementById("history");
 
-<!-- SETTINGS -->
+    /* ==================================================
+       THEME
+    ================================================== */
 
-<div
- class="backdrop"
- id="settingsModal"
- onclick="closeSettings(event)">
+    function setTheme(theme) {
 
- <div
-  class="modal"
-  onclick="event.stopPropagation()">
+      document.body.classList.toggle(
+        "light",
+        theme === "light"
+      );
 
-  <div class="modal-head">
+      localStorage.setItem(
+        "nexora_theme",
+        theme
+      );
 
-   <h2>Nexora Settings</h2>
-
-   <button
-    class="close"
-    onclick="closeSettings()">
-    ×
-   </button>
-
-  </div>
-
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Appearance
-   </span>
-
-   <div class="theme-row">
-
-    <button
-     class="theme-btn"
-     onclick="setTheme('light')">
-     ☀ Light
-    </button>
-
-    <button
-     class="theme-btn"
-     onclick="setTheme('dark')">
-     ☾ Dark
-    </button>
-
-   </div>
-
-  </div>
-
-
-  <div class="setting">
-
-   <span class="setting-label">
-    AI Model
-   </span>
-
-   <select
-    class="select"
-    id="modelSelect"
-    onchange="changeModel()">
-
-    <option value="gemini-3.6-flash">
-     Gemini 3.6 Flash
-    </option>
-
-   </select>
-
-  </div>
-
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Security
-   </span>
-
-   <button
-    class="setting-btn"
-    onclick="openPasswordModal()">
-    🔐 Change password
-   </button>
-
-  </div>
-
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Chat history
-   </span>
-
-   <button
-    class="setting-btn"
-    onclick="clearHistory()">
-    🗑 Delete all chat history
-   </button>
-
-  </div>
-
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Account
-   </span>
-
-   <button
-    class="setting-btn danger"
-    onclick="deleteAccount()">
-    ⚠ Delete my account
-   </button>
-
-  </div>
-
- </div>
-
-</div>
-
-
-<!-- PASSWORD -->
-
-<div
- class="backdrop"
- id="passwordModal"
- onclick="closePasswordModal(event)">
-
- <div
-  class="modal"
-  onclick="event.stopPropagation()">
-
-  <div class="modal-head">
-
-   <h2>Change Password</h2>
-
-   <button
-    class="close"
-    onclick="closePasswordModal()">
-    ×
-   </button>
-
-  </div>
-
-  <div class="setting">
-
-   <span class="setting-label">
-    Current password
-   </span>
-
-   <input
-    class="form-input"
-    id="currentPassword"
-    type="password">
-
-  </div>
-
-  <div class="setting">
-
-   <span class="setting-label">
-    New password
-   </span>
-
-   <input
-    class="form-input"
-    id="newPassword"
-    type="password">
-
-  </div>
-
-  <button
-   class="auth-submit"
-   onclick="changePassword()">
-   Update password
-  </button>
-
- </div>
-
-</div>
-
-
-<div
- class="toast"
- id="toast">
-</div>
-
-
-<script>
-
-/* =========================
-   CONFIG
-========================= */
-
-const API="/api/chat";
-const IMAGE_API="/api/generate-image";
-const DEFAULT_MODEL="gemini-3.6-flash";
-
-
-/* =========================
-   STATE
-========================= */
-
-let currentUser=null;
-let authMode="login";
-
-let chats=[];
-let currentChat=null;
-let conversation=[];
-
-let selectedFile=null;
-let selectedImage=null;
-
-let sending=false;
-let currentMode="chat";
-let selectedModel=DEFAULT_MODEL;
-
-
-/* =========================
-   ELEMENTS
-========================= */
-
-const authScreen=
- document.getElementById("authScreen");
-
-const app=
- document.getElementById("app");
-
-const input=
- document.getElementById("message");
-
-const send=
- document.getElementById("send");
-
-const messages=
- document.getElementById("messages");
-
-const welcome=
- document.getElementById("welcome");
-
-const chatArea=
- document.getElementById("chatArea");
-
-const historyBox=
- document.getElementById("history");
-
-
-/* =========================
-   AUTH TABS
-========================= */
-
-function showAuth(mode){
-
- authMode=mode;
-
- document
-  .getElementById("loginTab")
-  .classList.toggle("active",mode==="login");
-
- document
-  .getElementById("signupTab")
-  .classList.toggle("active",mode==="signup");
-
- document
-  .getElementById("nameGroup")
-  .style.display=
-   mode==="signup"
-    ? "block"
-    : "none";
-
- document
-  .getElementById("authSubmit")
-  .textContent=
-   mode==="signup"
-    ? "Create Nexora Account"
-    : "Login to Nexora";
-
- document
-  .getElementById("authPassword")
-  .autocomplete=
-   mode==="signup"
-    ? "new-password"
-    : "current-password";
-
- document
-  .getElementById("authError")
-  .textContent="";
-}
-
-
-/* =========================
-   AUTH
-========================= */
-
-document
- .getElementById("authForm")
- .addEventListener("submit",async event=>{
-
-  event.preventDefault();
-
-  const name=
-   document.getElementById("authName").value.trim();
-
-  const email=
-   document.getElementById("authEmail").value.trim();
-
-  const password=
-   document.getElementById("authPassword").value;
-
-  const error=
-   document.getElementById("authError");
-
-  const button=
-   document.getElementById("authSubmit");
-
-  error.textContent="";
-
-  if(!email || !password){
-   error.textContent="Enter your email and password.";
-   return;
-  }
-
-  if(authMode==="signup" && !name){
-   error.textContent="Enter your name.";
-   return;
-  }
-
-  button.disabled=true;
-  button.textContent=
-   authMode==="signup"
-    ? "Creating account..."
-    : "Logging in...";
-
-  try{
-
-   const endpoint=
-    authMode==="signup"
-     ? "/api/signup"
-     : "/api/login";
-
-   const body=
-    authMode==="signup"
-     ? {name,email,password}
-     : {email,password};
-
-   const response=
-    await fetch(endpoint,{
-     method:"POST",
-     headers:{
-      "Content-Type":"application/json"
-     },
-     credentials:"include",
-     body:JSON.stringify(body)
-    });
-
-   const data=
-    await response.json().catch(()=>({}));
-
-   if(!response.ok){
-    throw new Error(
-     data.error ||
-     "Authentication failed."
-    );
-   }
-
-   currentUser=
-    data.user ||
-    data;
-
-   await enterApp();
-
-  }catch(err){
-
-   error.textContent=
-    err.message ||
-    "Something went wrong.";
-
-  }finally{
-
-   button.disabled=false;
-
-   button.textContent=
-    authMode==="signup"
-     ? "Create Nexora Account"
-     : "Login to Nexora";
-  }
-
- });
-
-
-/* =========================
-   SESSION
-========================= */
-
-async function checkSession(){
-
- try{
-
-  const response=
-   await fetch(
-    "/api/me",
-    {
-     credentials:"include"
-    }
-   );
-
-  if(!response.ok){
-   showAuthScreen();
-   return;
-  }
-
-  const data=
-   await response.json();
-
-  currentUser=
-   data.user ||
-   data;
-
-  await enterApp();
-
- }catch{
-
-  showAuthScreen();
- }
-}
-
-
-async function enterApp(){
-
- authScreen.style.display="none";
- app.style.display="block";
-
- updateUserUI();
-
- loadTheme();
- loadChats();
-
- selectedModel=
-  localStorage.getItem(
-   "nexora_model"
-  ) || DEFAULT_MODEL;
-
- document
-  .getElementById("modelSelect")
-  .value=selectedModel;
-
- updateHeaderModel();
-
- newChat();
-
- input.focus();
-}
-
-
-function showAuthScreen(){
-
- authScreen.style.display="grid";
- app.style.display="none";
-}
-
-
-/* =========================
-   USER UI
-========================= */
-
-function getUserName(){
-
- return (
-  currentUser?.name ||
-  currentUser?.username ||
-  currentUser?.email?.split("@")[0] ||
-  "there"
- );
-}
-
-
-function getInitial(){
-
- return getUserName()
-  .trim()
-  .charAt(0)
-  .toUpperCase() || "N";
-}
-
-
-function updateUserUI(){
-
- const name=
-  getUserName();
-
- const email=
-  currentUser?.email || "";
-
- document
-  .getElementById("welcomeName")
-  .textContent=name;
-
- document
-  .getElementById("miniName")
-  .textContent=name;
-
- document
-  .getElementById("miniEmail")
-  .textContent=email;
-
- document
-  .getElementById("miniAvatar")
-  .textContent=getInitial();
-
- document
-  .getElementById("profileAvatar")
-  .textContent=getInitial();
-
- document
-  .getElementById("profileName")
-  .textContent=name;
-
- document
-  .getElementById("profileEmail")
-  .textContent=email;
-
- document
-  .getElementById("profileNameInput")
-  .value=name;
-}
-
-
-/* =========================
-   LOGOUT
-========================= */
-
-async function logout(){
-
- try{
-
-  await fetch(
-   "/api/logout",
-   {
-    method:"POST",
-    credentials:"include"
-   }
-  );
-
- }catch{}
-
- currentUser=null;
- chats=[];
- currentChat=null;
- conversation=[];
-
- localStorage.removeItem("nexora_chats");
-
- closeAllModals();
-
- showAuthScreen();
-
- document
-  .getElementById("authPassword")
-  .value="";
-
- toast("Logged out successfully");
-}
-
-
-/* =========================
-   PROFILE
-========================= */
-
-function openProfile(){
-
- updateUserUI();
-
- document
-  .getElementById("profileModal")
-  .classList.add("show");
-}
-
-
-function closeProfile(event){
-
- if(
-  event &&
-  event.target!==event.currentTarget
- ){
-  return;
- }
-
- document
-  .getElementById("profileModal")
-  .classList.remove("show");
-}
-
-
-async function updateProfile(){
-
- const name=
-  document
-   .getElementById("profileNameInput")
-   .value
-   .trim();
-
- if(!name){
-  toast("Name cannot be empty");
-  return;
- }
-
- try{
-
-  const response=
-   await fetch(
-    "/api/profile",
-    {
-     method:"PUT",
-     headers:{
-      "Content-Type":"application/json"
-     },
-     credentials:"include",
-     body:JSON.stringify({name})
-    }
-   );
-
-  const data=
-   await response.json().catch(()=>({}));
-
-  if(!response.ok){
-   throw new Error(
-    data.error ||
-    "Unable to update profile."
-   );
-  }
-
-  currentUser=
-   data.user ||
-   {
-    ...currentUser,
-    name
-   };
-
-  updateUserUI();
-
-  toast("Profile updated");
-
- }catch(error){
-
-  toast(error.message);
- }
-}
-
-
-/* =========================
-   PASSWORD
-========================= */
-
-function openPasswordModal(){
-
- document
-  .getElementById("passwordModal")
-  .classList.add("show");
-}
-
-
-function closePasswordModal(event){
-
- if(
-  event &&
-  event.target!==event.currentTarget
- ){
-  return;
- }
-
- document
-  .getElementById("passwordModal")
-  .classList.remove("show");
-}
-
-
-async function changePassword(){
-
- const currentPassword=
-  document
-   .getElementById("currentPassword")
-   .value;
-
- const newPassword=
-  document
-   .getElementById("newPassword")
-   .value;
-
- if(!currentPassword || !newPassword){
-  toast("Fill both password fields");
-  return;
- }
-
- if(newPassword.length<8){
-  toast("New password must be at least 8 characters");
-  return;
- }
-
- try{
-
-  const response=
-   await fetch(
-    "/api/change-password",
-    {
-     method:"POST",
-     headers:{
-      "Content-Type":"application/json"
-     },
-     credentials:"include",
-     body:JSON.stringify({
-      currentPassword,
-      newPassword
-     })
-    }
-   );
-
-  const data=
-   await response.json().catch(()=>({}));
-
-  if(!response.ok){
-   throw new Error(
-    data.error ||
-    "Password change failed."
-   );
-  }
-
-  document
-   .getElementById("currentPassword")
-   .value="";
-
-  document
-   .getElementById("newPassword")
-   .value="";
-
-  closePasswordModal();
-
-  toast("Password updated successfully");
-
- }catch(error){
-
-  toast(error.message);
- }
-}
-
-
-/* =========================
-   DELETE ACCOUNT
-========================= */
-
-async function deleteAccount(){
-
- const confirmed=
-  confirm(
-   "Delete your Nexora account permanently?\n\nThis cannot be undone."
-  );
-
- if(!confirmed) return;
-
- try{
-
-  const response=
-   await fetch(
-    "/api/delete-account",
-    {
-     method:"DELETE",
-     credentials:"include"
-    }
-   );
-
-  const data=
-   await response.json().catch(()=>({}));
-
-  if(!response.ok){
-   throw new Error(
-    data.error ||
-    "Unable to delete account."
-   );
-  }
-
-  currentUser=null;
-  chats=[];
-  conversation=[];
-  currentChat=null;
-
-  localStorage.removeItem(
-   "nexora_chats"
-  );
-
-  closeAllModals();
-  showAuthScreen();
-
-  toast("Account deleted");
-
- }catch(error){
-
-  toast(error.message);
- }
-}
-
-
-/* =========================
-   THEME
-========================= */
-
-function setTheme(theme){
-
- document.body.classList.toggle(
-  "light",
-  theme==="light"
- );
-
- localStorage.setItem(
-  "nexora_theme",
-  theme
- );
-
- document
-  .getElementById("themeIcon")
-  .textContent=
-   theme==="light"
-    ? "☀"
-    : "☾";
-}
-
-
-function toggleTheme(){
-
- const light=
-  document.body.classList.contains("light");
-
- setTheme(
-  light
-   ? "dark"
-   : "light"
- );
-}
-
-
-function loadTheme(){
-
- setTheme(
-  localStorage.getItem(
-   "nexora_theme"
-  ) || "dark"
- );
-}
-
-
-/* =========================
-   MODEL
-========================= */
-
-function changeModel(){
-
- selectedModel=
-  document
-   .getElementById("modelSelect")
-   .value;
-
- localStorage.setItem(
-  "nexora_model",
-  selectedModel
- );
-
- updateHeaderModel();
-
- toast("Model selected");
-}
-
-
-function updateHeaderModel(){
-
- document
-  .getElementById("headerModel")
-  .textContent=
-   selectedModel
-    .replace("gemini-","Gemini ")
-    .replace("-"," ");
-}
-
-
-/* =========================
-   MODES
-========================= */
-
-function setMode(mode){
-
- currentMode=mode;
-
- document
-  .getElementById("chatMode")
-  .classList.toggle(
-   "active",
-   mode==="chat"
-  );
-
- document
-  .getElementById("imageMode")
-  .classList.toggle(
-   "active",
-   mode==="image"
-  );
-
- document
-  .getElementById("codeMode")
-  .classList.toggle(
-   "active",
-   mode==="code"
-  );
-
- if(mode==="image"){
-
-  input.placeholder=
-   "Describe the image you want to create...";
-
- }else if(mode==="code"){
-
-  input.placeholder=
-   "Describe the code you want...";
-
- }else{
-
-  input.placeholder=
-   "Message Nexora AI...";
- }
-
- input.focus();
-}
-
-
-function activateImageMode(){
-
- setMode("image");
-
- input.value=
-  "Create a premium futuristic AI artwork";
-
- resizeInput();
-
- input.focus();
-}
-
-
-/* =========================
-   CHAT STORAGE
-========================= */
-
-function loadChats(){
-
- try{
-
-  chats=
-   JSON.parse(
-    localStorage.getItem(
-     "nexora_chats"
-    ) || "[]"
-   );
-
-  if(!Array.isArray(chats)){
-   chats=[];
-  }
-
- }catch{
-
-  chats=[];
- }
-
- renderHistory();
-}
-
-
-function saveChats(){
-
- localStorage.setItem(
-  "nexora_chats",
-  JSON.stringify(chats)
- );
-}
-
-
-/* =========================
-   NEW CHAT
-========================= */
-
-function newChat(){
-
- currentChat=null;
- conversation=[];
-
- messages.innerHTML="";
- messages.style.display="none";
-
- welcome.style.display="flex";
-
- input.value="";
-
- removeFile();
-
- setMode("chat");
-
- resizeInput();
-
- closeSidebar();
-
- renderHistory();
-
- input.focus();
-}
-
-
-/* =========================
-   MESSAGE
-========================= */
-
-function createMessage(role,text){
-
- welcome.style.display="none";
- messages.style.display="block";
-
- const article=
-  document.createElement("article");
-
- article.className=
-  "message "+role;
-
- const avatar=
-  document.createElement("div");
-
- avatar.className="message-avatar";
-
- avatar.textContent=
-  role==="user"
-   ? getInitial()
-   : "N";
-
- const body=
-  document.createElement("div");
-
- body.className="message-body";
-
- const name=
-  document.createElement("div");
-
- name.className="message-name";
-
- name.textContent=
-  role==="user"
-   ? getUserName()
-   : "Nexora AI";
-
- const textElement=
-  document.createElement("div");
-
- textElement.className="message-text";
-
- renderAnswer(
-  textElement,
-  text
- );
-
- body.appendChild(name);
- body.appendChild(textElement);
-
- if(role==="assistant"){
-
-  const actions=
-   document.createElement("div");
-
-  actions.className="actions";
-
-  const copy=
-   document.createElement("button");
-
-  copy.className="action";
-  copy.textContent="Copy";
-
-  copy.onclick=()=>{
-   copyText(textElement.innerText);
-  };
-
-  actions.appendChild(copy);
-  body.appendChild(actions);
- }
-
- article.appendChild(avatar);
- article.appendChild(body);
-
- messages.appendChild(article);
-
- scrollBottom();
-
- return textElement;
-}
-
-
-/* =========================
-   RENDER ANSWER
-========================= */
-
-function renderAnswer(element,text){
-
- element.innerHTML="";
-
- if(!text) return;
-
- const parts=
-  text.split(/```([\s\S]*?)```/g);
-
- parts.forEach((part,index)=>{
-
-  if(index%2===1){
-
-   const wrap=
-    document.createElement("div");
-
-   wrap.className="code-wrap";
-
-   const head=
-    document.createElement("div");
-
-   head.className="code-head";
-
-   const label=
-    document.createElement("span");
-
-   label.textContent="Code";
-
-   const button=
-    document.createElement("button");
-
-   button.className="code-copy";
-   button.textContent="Copy";
-
-   button.onclick=()=>{
-    copyText(part);
-   };
-
-   head.appendChild(label);
-   head.appendChild(button);
-
-   const code=
-    document.createElement("pre");
-
-   code.className="code-content";
-   code.textContent=part.trim();
-
-   wrap.appendChild(head);
-   wrap.appendChild(code);
-
-   element.appendChild(wrap);
-
-  }else{
-
-   const normal=
-    document.createElement("span");
-
-   normal.textContent=part;
-
-   element.appendChild(normal);
-  }
-
- });
-}
-
-
-/* =========================
-   SEND
-========================= */
-
-async function sendMessage(){
-
- if(sending) return;
-
- const text=
-  input.value.trim();
-
- if(!text) return;
-
- if(currentMode==="image"){
-
-  await generateImage(text);
-  return;
- }
-
- sending=true;
- send.disabled=true;
-
- if(!currentChat){
-
-  currentChat=
-   Date.now().toString();
-
-  chats.unshift({
-   id:currentChat,
-   title:text.slice(0,55),
-   messages:[],
-   updated:Date.now()
-  });
- }
-
- createMessage(
-  "user",
-  text
- );
-
- conversation.push({
-  role:"user",
-  content:text
- });
-
- const active=
-  chats.find(
-   c=>c.id===currentChat
-  );
-
- if(active){
-
-  active.messages.push({
-   role:"user",
-   content:text
-  });
-
-  active.updated=Date.now();
- }
-
- input.value="";
- resizeInput();
-
- const assistantText=
-  createMessage(
-   "assistant",
-   ""
-  );
-
- try{
-
-  const payload={
-   message:text,
-   history:conversation.slice(-12),
-   model:selectedModel
-  };
-
-  if(selectedImage){
-
-   payload.image=
-    selectedImage;
-  }
-
-  removeFile();
-
-  const response=
-   await fetch(
-    API,
-    {
-     method:"POST",
-     headers:{
-      "Content-Type":"application/json"
-     },
-     credentials:"include",
-     body:JSON.stringify(payload)
-    }
-   );
-
-  if(response.status===401){
-
-   throw new Error(
-    "Your session has expired. Please login again."
-   );
-  }
-
-  if(!response.ok){
-
-   const errorText=
-    await response.text();
-
-   let errorMessage=
-    "Request failed.";
-
-   try{
-
-    const error=
-     JSON.parse(errorText);
-
-    errorMessage=
-     error.error ||
-     errorMessage;
-
-   }catch{}
-
-   throw new Error(errorMessage);
-  }
-
-  if(!response.body){
-
-   throw new Error(
-    "Streaming is not supported."
-   );
-  }
-
-  const reader=
-   response.body.getReader();
-
-  const decoder=
-   new TextDecoder();
-
-  let buffer="";
-  let answer="";
-
-  while(true){
-
-   const {
-    value,
-    done
-   }=
-    await reader.read();
-
-   if(done) break;
-
-   buffer+=
-    decoder.decode(
-     value,
-     {stream:true}
-    );
-
-   const lines=
-    buffer.split("\n");
-
-   buffer=
-    lines.pop() || "";
-
-   for(
-    const line of lines
-   ){
-
-    const trimmed=
-     line.trim();
-
-    if(
-     !trimmed ||
-     trimmed.startsWith(":")
-    ){
-     continue;
+      document.getElementById(
+        "themeIcon"
+      ).textContent =
+        theme === "light" ? "☀" : "☾";
     }
 
-    if(
-     !trimmed.startsWith("data:")
-    ){
-     continue;
+    function toggleTheme() {
+
+      const light =
+        document.body.classList.contains("light");
+
+      setTheme(
+        light ? "dark" : "light"
+      );
     }
 
-    const raw=
-     trimmed.slice(5).trim();
+    function loadTheme() {
 
-    if(raw==="[DONE]"){
-     continue;
+      const saved =
+        localStorage.getItem("nexora_theme");
+
+      setTheme(
+        saved === "light"
+          ? "light"
+          : "dark"
+      );
     }
 
-    try{
+    /* ==================================================
+       MODE
+    ================================================== */
 
-     const chunk=
-      JSON.parse(raw);
+    function setMode(mode) {
 
-     const parts=
-      chunk
-       ?.candidates?.[0]
-       ?.content?.parts;
+      currentMode = mode;
 
-     if(Array.isArray(parts)){
-
-      for(
-       const part of parts
-      ){
-
-       if(
-        typeof part?.text===
-        "string"
-       ){
-
-        answer+=part.text;
-
-        renderAnswer(
-         assistantText,
-         answer
+      document
+        .getElementById("chatMode")
+        .classList.toggle(
+          "active",
+          mode === "chat"
         );
 
-        scrollBottom();
-       }
+      document
+        .getElementById("imageMode")
+        .classList.toggle(
+          "active",
+          mode === "image"
+        );
+
+      document
+        .getElementById("codeMode")
+        .classList.toggle(
+          "active",
+          mode === "code"
+        );
+
+      if (mode === "image") {
+
+        input.placeholder =
+          "Describe the image you want to create...";
+
+      } else if (mode === "code") {
+
+        input.placeholder =
+          "Describe the code you want...";
+
+      } else {
+
+        input.placeholder =
+          "Message Nexora AI...";
       }
-     }
 
-    }catch{}
-   }
-  }
-
-  if(!answer.trim()){
-
-   throw new Error(
-    "No response received."
-   );
-  }
-
-  conversation.push({
-   role:"assistant",
-   content:answer
-  });
-
-  if(active){
-
-   active.messages.push({
-    role:"assistant",
-    content:answer
-   });
-
-   active.updated=Date.now();
-  }
-
-  saveChats();
-  renderHistory();
-
- }catch(error){
-
-  renderAnswer(
-   assistantText,
-   "Sorry, something went wrong.\n\n"+
-   error.message
-  );
-
- }finally{
-
-  sending=false;
-  send.disabled=false;
-  input.focus();
- }
-}
-
-
-/* =========================
-   IMAGE
-========================= */
-
-async function generateImage(prompt){
-
- if(sending) return;
-
- sending=true;
- send.disabled=true;
-
- createMessage(
-  "user",
-  "🎨 "+prompt
- );
-
- const assistant=
-  createMessage(
-   "assistant",
-   "Creating your image..."
-  );
-
- try{
-
-  const response=
-   await fetch(
-    IMAGE_API,
-    {
-     method:"POST",
-     headers:{
-      "Content-Type":"application/json"
-     },
-     credentials:"include",
-     body:JSON.stringify({
-      prompt,
-      model:selectedModel
-     })
+      input.focus();
     }
-   );
 
-  const data=
-   await response.json();
+    function activateImageMode() {
 
-  if(!response.ok){
+      setMode("image");
 
-   throw new Error(
-    data?.error ||
-    "Image generation failed."
-   );
-  }
+      input.value =
+        "Create a premium futuristic AI artwork";
 
-  if(data.imageUrl){
+      resizeInput();
 
-   assistant.innerHTML="";
+      input.focus();
+    }
 
-   const img=
-    document.createElement("img");
+    /* ==================================================
+       LOCAL CHAT HISTORY
+    ================================================== */
 
-   img.src=data.imageUrl;
-   img.alt=prompt;
+    function loadChats() {
 
-   img.style.maxWidth="100%";
-   img.style.borderRadius="16px";
-   img.style.display="block";
+      try {
 
-   assistant.appendChild(img);
+        chats =
+          JSON.parse(
+            localStorage.getItem(
+              "nexora_chats"
+            ) || "[]"
+          );
 
-  }else{
+        if (!Array.isArray(chats)) {
+          chats = [];
+        }
 
-   throw new Error(
-    "No image returned."
-   );
-  }
+      } catch {
 
- }catch(error){
+        chats = [];
+      }
 
-  renderAnswer(
-   assistant,
-   "Image generation failed.\n\n"+
-   error.message
-  );
+      renderHistory();
+    }
 
- }finally{
+    function saveChats() {
 
-  sending=false;
-  send.disabled=false;
- }
-}
+      try {
 
+        localStorage.setItem(
+          "nexora_chats",
+          JSON.stringify(chats)
+        );
 
-/* =========================
-   FILE
-========================= */
+      } catch {
 
-function fileSelected(inputElement){
+        toast(
+          "Unable to save chat history."
+        );
+      }
+    }
 
- const file=
-  inputElement.files?.[0];
+    function newChat() {
 
- if(!file) return;
+      currentChat = null;
+      conversation = [];
 
- selectedFile=file;
+      messages.innerHTML = "";
+      messages.style.display = "none";
 
- const preview=
-  document.getElementById(
-   "attachmentPreview"
-  );
+      welcome.style.display = "flex";
 
- const name=
-  document.getElementById(
-   "attachmentName"
-  );
+      input.value = "";
 
- const thumb=
-  document.getElementById(
-   "previewThumb"
-  );
+      removeFile();
 
- name.textContent=
-  "📎 "+file.name;
+      setMode("chat");
 
- preview.classList.add("show");
+      resizeInput();
 
- if(file.type.startsWith("image/")){
+      closeSidebar();
 
-  thumb.style.display="block";
+      renderHistory();
 
-  const reader=
-   new FileReader();
+      input.focus();
+    }
 
-  reader.onload=()=>{
+    /* ==================================================
+       MESSAGE UI
+    ================================================== */
 
-   const result=
-    String(reader.result);
+    function createMessage(role, text) {
 
-   thumb.src=result;
+      welcome.style.display = "none";
+      messages.style.display = "block";
 
-   const comma=
-    result.indexOf(",");
+      const article =
+        document.createElement("article");
 
-   selectedImage={
-    mimeType:file.type,
-    data:
-     comma>=0
-      ? result.slice(comma+1)
-      : result
-   };
-  };
+      article.className =
+        "message " + role;
 
-  reader.readAsDataURL(file);
+      const avatar =
+        document.createElement("div");
 
- }else{
+      avatar.className = "avatar";
 
-  thumb.style.display="none";
-  selectedImage=null;
- }
-}
+      avatar.textContent =
+        role === "user"
+          ? "You"
+          : "N";
 
+      const body =
+        document.createElement("div");
 
-function removeFile(){
+      body.className = "message-body";
 
- selectedFile=null;
- selectedImage=null;
+      const name =
+        document.createElement("div");
 
- const file=
-  document.getElementById("file");
+      name.className = "message-name";
 
- file.value="";
+      name.textContent =
+        role === "user"
+          ? "You"
+          : "Nexora AI";
 
- document
-  .getElementById("attachmentPreview")
-  .classList.remove("show");
+      const textElement =
+        document.createElement("div");
 
- document
-  .getElementById("previewThumb")
-  .style.display="none";
-}
+      textElement.className =
+        "message-text";
 
+      renderAnswer(
+        textElement,
+        text
+      );
 
-/* =========================
-   VOICE
-========================= */
+      body.appendChild(name);
+      body.appendChild(textElement);
 
-function startVoice(){
+      if (role === "assistant") {
 
- const Recognition=
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
+        const actions =
+          document.createElement("div");
 
- if(!Recognition){
+        actions.className = "actions";
 
-  toast(
-   "Voice input isn't supported here."
-  );
+        const copy =
+          document.createElement("button");
 
-  return;
- }
+        copy.className = "action";
+        copy.textContent = "Copy";
 
- const recognition=
-  new Recognition();
+        copy.onclick = () => {
 
- recognition.lang="en-IN";
- recognition.interimResults=false;
- recognition.continuous=false;
+          copyText(
+            textElement.innerText
+          );
+        };
 
- recognition.onstart=()=>{
-  toast("Listening...");
- };
+        actions.appendChild(copy);
+        body.appendChild(actions);
+      }
 
- recognition.onresult=event=>{
+      article.appendChild(avatar);
+      article.appendChild(body);
 
-  const text=
-   event.results?.[0]?.[0]?.transcript;
+      messages.appendChild(article);
 
-  if(text){
+      scrollBottom();
 
-   input.value+=
-    (input.value ? " " : "")+
-    text;
+      return textElement;
+    }
 
-   resizeInput();
-  }
- };
+    /* ==================================================
+       ANSWER RENDERER
+    ================================================== */
 
- recognition.onerror=()=>{
-  toast("Voice input failed.");
- };
+    function renderAnswer(element, text) {
 
- recognition.start();
-}
+      element.innerHTML = "";
 
+      if (!text) {
+        return;
+      }
 
-/* =========================
-   HISTORY
-========================= */
+      const parts =
+        String(text)
+          .split(/```([\s\S]*?)```/g);
 
-function renderHistory(){
+      parts.forEach(
+        (part, index) => {
 
- historyBox.innerHTML="";
+          if (index % 2 === 1) {
 
- const query=
-  document
-   .getElementById("search")
-   .value
-   .trim()
-   .toLowerCase();
+            const wrap =
+              document.createElement("div");
 
- chats
-  .filter(chat=>
-   !query ||
-   chat.title
-    .toLowerCase()
-    .includes(query)
-  )
-  .forEach(chat=>{
+            wrap.className =
+              "code-wrap";
 
-   const row=
-    document.createElement("div");
+            const head =
+              document.createElement("div");
 
-   row.className="chat-row";
+            head.className =
+              "code-head";
 
-   if(chat.id===currentChat){
-    row.classList.add("active");
-   }
+            const label =
+              document.createElement("span");
 
-   const icon=
-    document.createElement("span");
+            label.textContent =
+              "Code";
 
-   icon.textContent="💬";
+            const button =
+              document.createElement("button");
 
-   const title=
-    document.createElement("span");
+            button.className =
+              "code-copy";
 
-   title.className="chat-title";
-   title.textContent=chat.title;
+            button.textContent =
+              "Copy";
 
-   const menu=
-    document.createElement("button");
+            button.onclick = () => {
 
-   menu.className="chat-menu";
-   menu.textContent="•••";
+              copyText(
+                part.trim()
+              );
+            };
 
-   menu.onclick=event=>{
+            head.appendChild(label);
+            head.appendChild(button);
 
-    event.stopPropagation();
+            const code =
+              document.createElement("pre");
 
-    chatActions(chat.id);
-   };
+            code.className =
+              "code-content";
 
-   row.onclick=()=>{
-    openChat(chat.id);
-   };
+            code.textContent =
+              part.trim();
 
-   row.appendChild(icon);
-   row.appendChild(title);
-   row.appendChild(menu);
+            wrap.appendChild(head);
+            wrap.appendChild(code);
 
-   historyBox.appendChild(row);
-  });
-}
+            element.appendChild(wrap);
 
+          } else {
 
-function openChat(id){
+            const normal =
+              document.createElement("span");
 
- const chat=
-  chats.find(c=>c.id===id);
+            normal.textContent =
+              part;
 
- if(!chat) return;
+            element.appendChild(normal);
+          }
+        }
+      );
+    }
 
- currentChat=id;
+    /* ==================================================
+       SEND CHAT
+    ================================================== */
 
- conversation=
-  chat.messages.map(m=>({
-   role:m.role,
-   content:m.content
-  }));
+    async function sendMessage() {
 
- messages.innerHTML="";
+      if (sending) {
+        return;
+      }
 
- welcome.style.display="none";
- messages.style.display="block";
+      const text =
+        input.value.trim();
 
- chat.messages.forEach(m=>{
+      if (!text) {
+        return;
+      }
 
-  createMessage(
-   m.role,
-   m.content
-  );
- });
+      if (currentMode === "image") {
 
- renderHistory();
- closeSidebar();
-}
+        await generateImage(text);
+        return;
+      }
 
+      sending = true;
+      send.disabled = true;
 
-function chatActions(id){
+      if (!currentChat) {
 
- const chat=
-  chats.find(c=>c.id===id);
+        currentChat =
+          Date.now().toString();
 
- if(!chat) return;
+        chats.unshift({
 
- const choice=
-  prompt(
-   "Type:\nrename = Rename chat\ndelete = Delete chat"
-  );
+          id: currentChat,
 
- if(
-  choice?.toLowerCase()==="rename"
- ){
+          title:
+            text.slice(0, 55),
 
-  const title=
-   prompt(
-    "New chat name:",
-    chat.title
-   );
+          messages: [],
 
-  if(title?.trim()){
+          updated:
+            Date.now()
+        });
+      }
 
-   chat.title=
-    title.trim();
+      createMessage(
+        "user",
+        text
+      );
 
-   saveChats();
-   renderHistory();
-  }
- }
+      conversation.push({
 
- if(
-  choice?.toLowerCase()==="delete"
- ){
+        role: "user",
 
-  chats=
-   chats.filter(
-    c=>c.id!==id
-   );
+        content: text
+      });
 
-  saveChats();
+      const active =
+        chats.find(
+          c => c.id === currentChat
+        );
 
-  if(currentChat===id){
-   newChat();
-  }
+      if (active) {
 
-  renderHistory();
- }
-}
+        active.messages.push({
 
+          role: "user",
 
-/* =========================
-   SETTINGS
-========================= */
+          content: text
+        });
 
-function openSettings(){
+        active.updated =
+          Date.now();
+      }
 
- document
-  .getElementById("settingsModal")
-  .classList.add("show");
-}
+      input.value = "";
 
+      resizeInput();
 
-function closeSettings(event){
+      const assistantText =
+        createMessage(
+          "assistant",
+          ""
+        );
 
- if(
-  event &&
-  event.target!==event.currentTarget
- ){
-  return;
- }
+      try {
 
- document
-  .getElementById("settingsModal")
-  .classList.remove("show");
-}
+        const payload = {
 
+          message: text,
 
-function clearHistory(){
+          history:
+            conversation.slice(-12),
 
- if(
-  !confirm(
-   "Delete all local chat history?"
-  )
- ){
-  return;
- }
+          model:
+            selectedModel
+        };
 
- chats=[];
+        if (selectedImage) {
 
- saveChats();
+          payload.image =
+            selectedImage;
+        }
 
- newChat();
+        removeFile();
 
- toast(
-  "Chat history deleted"
- );
-}
+        const response =
+          await fetch(
+            API,
+            {
+              method: "POST",
 
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
 
-/* =========================
-   SIDEBAR
-========================= */
+              body:
+                JSON.stringify(payload)
+            }
+          );
 
-function openSidebar(){
+        if (!response.ok) {
 
- document
-  .getElementById("sidebar")
-  .classList.add("open");
+          const errorText =
+            await response.text();
 
- document
-  .getElementById("overlay")
-  .classList.add("open");
-}
+          let errorMessage =
+            "Request failed.";
 
+          try {
 
-function closeSidebar(){
+            const error =
+              JSON.parse(
+                errorText
+              );
 
- document
-  .getElementById("sidebar")
-  .classList.remove("open");
+            errorMessage =
+              error.error ||
+              errorMessage;
 
- document
-  .getElementById("overlay")
-  .classList.remove("open");
-}
+          } catch {}
 
+          throw new Error(
+            errorMessage
+          );
+        }
 
-/* =========================
-   SUGGESTIONS
-========================= */
+        if (!response.body) {
 
-function suggest(text){
+          throw new Error(
+            "Streaming is not supported by this browser."
+          );
+        }
 
- setMode("chat");
+        const reader =
+          response.body.getReader();
 
- input.value=text;
+        const decoder =
+          new TextDecoder();
 
- resizeInput();
+        let buffer = "";
+        let answer = "";
 
- input.focus();
-}
+        while (true) {
 
+          const {
+            value,
+            done
+          } =
+            await reader.read();
 
-/* =========================
-   INPUT
-========================= */
+          if (done) {
+            break;
+          }
 
-function resizeInput(){
+          buffer +=
+            decoder.decode(
+              value,
+              {
+                stream: true
+              }
+            );
 
- input.style.height="auto";
+          const lines =
+            buffer.split("\n");
 
- input.style.height=
-  Math.min(
-   input.scrollHeight,
-   170
-  )+"px";
-}
+          buffer =
+            lines.pop() || "";
 
+          for (
+            const line of lines
+          ) {
 
-input.addEventListener(
- "input",
- resizeInput
-);
+            const trimmed =
+              line.trim();
 
+            if (
+              !trimmed ||
+              trimmed.startsWith(":")
+            ) {
+              continue;
+            }
 
-input.addEventListener(
- "keydown",
- event=>{
+            if (
+              !trimmed.startsWith("data:")
+            ) {
+              continue;
+            }
 
-  if(
-   event.key==="Enter" &&
-   !event.shiftKey
-  ){
+            const raw =
+              trimmed
+                .slice(5)
+                .trim();
 
-   event.preventDefault();
+            if (
+              raw === "[DONE]"
+            ) {
+              continue;
+            }
 
-   sendMessage();
-  }
- }
-);
+            try {
 
+              const chunk =
+                JSON.parse(raw);
 
-document
- .getElementById("composer")
- .addEventListener(
-  "submit",
-  event=>{
+              const parts =
+                chunk
+                  ?.candidates?.[0]
+                  ?.content?.parts;
 
-   event.preventDefault();
+              if (
+                Array.isArray(parts)
+              ) {
 
-   sendMessage();
-  }
-);
+                for (
+                  const part of parts
+                ) {
 
+                  if (
+                    typeof part?.text ===
+                    "string"
+                  ) {
 
-/* =========================
-   COPY
-========================= */
+                    answer +=
+                      part.text;
 
-async function copyText(text){
+                    renderAnswer(
+                      assistantText,
+                      answer
+                    );
 
- try{
+                    scrollBottom();
+                  }
+                }
+              }
 
-  await navigator.clipboard.writeText(text);
+            } catch {}
+          }
+        }
 
-  toast("Copied");
+        if (!answer.trim()) {
 
- }catch{
+          throw new Error(
+            "No response received from Nexora AI."
+          );
+        }
 
-  toast("Copy failed");
- }
-}
+        conversation.push({
 
+          role: "assistant",
 
-/* =========================
-   TOAST
-========================= */
+          content: answer
+        });
 
-let toastTimer;
+        if (active) {
 
-function toast(text){
+          active.messages.push({
 
- const element=
-  document.getElementById("toast");
+            role: "assistant",
 
- element.textContent=text;
+            content: answer
+          });
 
- element.classList.add("show");
+          active.updated =
+            Date.now();
+        }
 
- clearTimeout(toastTimer);
+        saveChats();
 
- toastTimer=
-  setTimeout(
-   ()=>{
-    element.classList.remove("show");
-   },
-   2300
-  );
-}
+        renderHistory();
 
+      } catch (error) {
 
-/* =========================
-   MODAL HELPERS
-========================= */
+        renderAnswer(
+          assistantText,
+          "Sorry, something went wrong.\n\n" +
+          (
+            error?.message ||
+            "Unknown error."
+          )
+        );
 
-function closeAllModals(){
+      } finally {
 
- document
-  .querySelectorAll(".backdrop")
-  .forEach(el=>{
-   el.classList.remove("show");
-  });
-}
+        sending = false;
 
+        send.disabled = false;
 
-/* =========================
-   START
-========================= */
+        input.focus();
+      }
+    }
 
-checkSession();
+    /* ==================================================
+       IMAGE GENERATION
+    ================================================== */
 
-</script>
+    async function generateImage(prompt) {
+
+      if (sending) {
+        return;
+      }
+
+      sending = true;
+      send.disabled = true;
+
+      createMessage(
+        "user",
+        "🎨 " + prompt
+      );
+
+      const assistant =
+        createMessage(
+          "assistant",
+          "Creating your image..."
+        );
+
+      try {
+
+        const response =
+          await fetch(
+            IMAGE_API,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+                  prompt
+                })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+
+          throw new Error(
+            data?.error ||
+            "Image generation failed."
+          );
+        }
+
+        if (
+          data?.imageUrl
+        ) {
+
+          assistant.innerHTML = "";
+
+          const img =
+            document.createElement("img");
+
+          img.src =
+            data.imageUrl;
+
+          img.alt =
+            prompt;
+
+          img.style.maxWidth =
+            "100%";
+
+          img.style.borderRadius =
+            "16px";
+
+          img.style.display =
+            "block";
+
+          img.loading =
+            "lazy";
+
+          assistant.appendChild(img);
+
+        } else {
+
+          throw new Error(
+            "Image generator returned no image."
+          );
+        }
+
+      } catch (error) {
+
+        renderAnswer(
+          assistant,
+          "Image generation failed.\n\n" +
+          (
+            error?.message ||
+            "Unknown error."
+          )
+        );
+
+      } finally {
+
+        input.value = "";
+
+        resizeInput();
+
+        setMode("chat");
+
+        sending = false;
+
+        send.disabled = false;
+
+        input.focus();
+      }
+    }
+
+    /* ==================================================
+       FILE UPLOAD
+    ================================================== */
+
+    function fileSelected(inputElement) {
+
+      const file =
+        inputElement.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      selectedFile = file;
+
+      const preview =
+        document.getElementById(
+          "attachmentPreview"
+        );
+
+      const name =
+        document.getElementById(
+          "attachmentName"
+        );
+
+      const thumb =
+        document.getElementById(
+          "previewThumb"
+        );
+
+      name.textContent =
+        "📎 " + file.name;
+
+      preview.classList.add("show");
+
+      if (
+        file.type.startsWith("image/")
+      ) {
+
+        thumb.style.display =
+          "block";
+
+        const reader =
+          new FileReader();
+
+        reader.onload = () => {
+
+          const result =
+            String(
+              reader.result
+            );
+
+          thumb.src =
+            result;
+
+          const comma =
+            result.indexOf(",");
+
+          selectedImage = {
+
+            mimeType:
+              file.type,
+
+            data:
+              comma >= 0
+                ? result.slice(
+                    comma + 1
+                  )
+                : result
+          };
+        };
+
+        reader.readAsDataURL(file);
+
+      } else {
+
+        thumb.style.display =
+          "none";
+
+        selectedImage = null;
+      }
+    }
+
+    function removeFile() {
+
+      selectedFile = null;
+      selectedImage = null;
+
+      const file =
+        document.getElementById(
+          "file"
+        );
+
+      file.value = "";
+
+      document
+        .getElementById(
+          "attachmentPreview"
+        )
+        .classList.remove("show");
+
+      document
+        .getElementById(
+          "previewThumb"
+        )
+        .style.display = "none";
+
+      document
+        .getElementById(
+          "attachmentName"
+        )
+        .textContent = "";
+    }
+
+    /* ==================================================
+       VOICE
+    ================================================== */
+
+    function startVoice() {
+
+      const Recognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+      if (!Recognition) {
+
+        toast(
+          "Voice input isn't supported in this browser."
+        );
+
+        return;
+      }
+
+      const recognition =
+        new Recognition();
+
+      recognition.lang =
+        "en-IN";
+
+      recognition.interimResults =
+        false;
+
+      recognition.continuous =
+        false;
+
+      recognition.onstart = () => {
+
+        toast(
+          "Listening..."
+        );
+      };
+
+      recognition.onresult =
+        event => {
+
+          const text =
+            event.results?.[0]?.[0]?.transcript;
+
+          if (text) {
+
+            input.value +=
+              (
+                input.value
+                  ? " "
+                  : ""
+              ) + text;
+
+            resizeInput();
+          }
+        };
+
+      recognition.onerror = () => {
+
+        toast(
+          "Voice input failed."
+        );
+      };
+
+      try {
+
+        recognition.start();
+
+      } catch {
+
+        toast(
+          "Voice input could not start."
+        );
+      }
+    }
+
+    /* ==================================================
+       HISTORY UI
+    ================================================== */
+
+    function renderHistory() {
+
+      historyBox.innerHTML = "";
+
+      const search =
+        document.getElementById(
+          "search"
+        );
+
+      const query =
+        search
+          ? search.value
+              .trim()
+              .toLowerCase()
+          : "";
+
+      chats
+        .filter(
+          chat =>
+            !query ||
+            String(chat.title || "")
+              .toLowerCase()
+              .includes(query)
+        )
+        .forEach(chat => {
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+          row.className =
+            "chat-row";
+
+          if (
+            chat.id === currentChat
+          ) {
+
+            row.classList.add(
+              "active"
+            );
+          }
+
+          const icon =
+            document.createElement(
+              "span"
+            );
+
+          icon.textContent =
+            "💬";
+
+          const title =
+            document.createElement(
+              "span"
+            );
+
+          title.className =
+            "chat-title";
+
+          title.textContent =
+            chat.title ||
+            "New chat";
+
+          const menu =
+            document.createElement(
+              "button"
+            );
+
+          menu.className =
+            "chat-menu";
+
+          menu.textContent =
+            "•••";
+
+          menu.title =
+            "Chat options";
+
+          menu.onclick =
+            event => {
+
+              event.stopPropagation();
+
+              chatActions(
+                chat.id
+              );
+            };
+
+          row.onclick = () => {
+
+            openChat(
+              chat.id
+            );
+          };
+
+          row.appendChild(icon);
+          row.appendChild(title);
+          row.appendChild(menu);
+
+          historyBox.appendChild(row);
+        });
+    }
+
+    function openChat(id) {
+
+      const chat =
+        chats.find(
+          c => c.id === id
+        );
+
+      if (!chat) {
+        return;
+      }
+
+      currentChat = id;
+
+      conversation =
+        Array.isArray(
+          chat.messages
+        )
+          ? chat.messages.map(
+              m => ({
+                role:
+                  m.role,
+                content:
+                  m.content
+              })
+            )
+          : [];
+
+      messages.innerHTML = "";
+
+      welcome.style.display =
+        "none";
+
+      messages.style.display =
+        "block";
+
+      conversation.forEach(
+        m => {
+
+          createMessage(
+            m.role,
+            m.content
+          );
+        }
+      );
+
+      renderHistory();
+
+      closeSidebar();
+
+      scrollBottom();
+    }
+
+    function chatActions(id) {
+
+      const chat =
+        chats.find(
+          c => c.id === id
+        );
+
+      if (!chat) {
+        return;
+      }
+
+      const choice =
+        prompt(
+          "Type:\nrename = Rename chat\ndelete = Delete chat"
+        );
+
+      if (
+        choice?.toLowerCase() ===
+        "rename"
+      ) {
+
+        const title =
+          prompt(
+            "New chat name:",
+            chat.title
+          );
+
+        if (
+          title?.trim()
+        ) {
+
+          chat.title =
+            title.trim();
+
+          saveChats();
+
+          renderHistory();
+        }
+      }
+
+      if (
+        choice?.toLowerCase() ===
+        "delete"
+      ) {
+
+        chats =
+          chats.filter(
+            c => c.id !== id
+          );
+
+        saveChats();
+
+        if (
+          currentChat === id
+        ) {
+
+          newChat();
+        }
+
+        renderHistory();
+      }
+    }
+
+    /* ==================================================
+       MODEL
+    ================================================== */
+
+    function changeModel() {
+
+      selectedModel =
+        document.getElementById(
+          "modelSelect"
+        ).value;
+
+      document.getElementById(
+        "headerModel"
+      ).textContent =
+        selectedModel
+          .replace(
+            "gemini-",
+            "Gemini "
+          )
+          .replace(
+            "-",
+            " "
+          );
+
+      localStorage.setItem(
+        "nexora_model",
+        selectedModel
+      );
+
+      toast(
+        "Model selected"
+      );
+    }
+
+    function loadModel() {
+
+      const saved =
+        localStorage.getItem(
+          "nexora_model"
+        );
+
+      if (
+        saved === DEFAULT_MODEL
+      ) {
+
+        selectedModel = saved;
+      } else {
+
+        selectedModel =
+          DEFAULT_MODEL;
+      }
+
+      document.getElementById(
+        "modelSelect"
+      ).value =
+        selectedModel;
+
+      document.getElementById(
+        "headerModel"
+      ).textContent =
+        "Gemini 3.6 Flash";
+    }
+
+    /* ==================================================
+       SETTINGS
+    ================================================== */
+
+    function openSettings() {
+
+      document
+        .getElementById(
+          "settingsModal"
+        )
+        .classList.add(
+          "show"
+        );
+    }
+
+    function closeSettings(event) {
+
+      if (
+        event &&
+        event.target !==
+          event.currentTarget
+      ) {
+
+        return;
+      }
+
+      document
+        .getElementById(
+          "settingsModal"
+        )
+        .classList.remove(
+          "show"
+        );
+    }
+
+    function clearHistory() {
+
+      if (
+        !confirm(
+          "Delete all chat history?"
+        )
+      ) {
+
+        return;
+      }
+
+      chats = [];
+
+      saveChats();
+
+      newChat();
+
+      closeSettings();
+
+      toast(
+        "Chat history deleted"
+      );
+    }
+
+    /* ==================================================
+       SIDEBAR
+    ================================================== */
+
+    function openSidebar() {
+
+      document
+        .getElementById(
+          "sidebar"
+        )
+        .classList.add(
+          "open"
+        );
+
+      document
+        .getElementById(
+          "overlay"
+        )
+        .classList.add(
+          "open"
+        );
+    }
+
+    function closeSidebar() {
+
+      document
+        .getElementById(
+          "sidebar"
+        )
+        .classList.remove(
+          "open"
+        );
+
+      document
+        .getElementById(
+          "overlay"
+        )
+        .classList.remove(
+          "open"
+        );
+    }
+
+    /* ==================================================
+       SUGGESTIONS
+    ================================================== */
+
+    function suggest(text) {
+
+      setMode("chat");
+
+      input.value =
+        text;
+
+      resizeInput();
+
+      input.focus();
+    }
+
+    /* ==================================================
+       COPY
+    ================================================== */
+
+    async function copyText(text) {
+
+      try {
+
+        await navigator.clipboard.writeText(
+          text
+        );
+
+        toast(
+          "Copied"
+        );
+
+      } catch {
+
+        toast(
+          "Copy failed"
+        );
+      }
+    }
+
+    /* ==================================================
+       INPUT
+    ================================================== */
+
+    function resizeInput() {
+
+      input.style.height =
+        "auto";
+
+      input.style.height =
+        Math.min(
+          input.scrollHeight,
+          170
+        ) + "px";
+    }
+
+    input.addEventListener(
+      "input",
+      resizeInput
+    );
+
+    input.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+
+          event.preventDefault();
+
+          sendMessage();
+        }
+      }
+    );
+
+    document
+      .getElementById(
+        "composer"
+      )
+      .addEventListener(
+        "submit",
+        event => {
+
+          event.preventDefault();
+
+          sendMessage();
+        }
+      );
+
+    /* ==================================================
+       SCROLL
+    ================================================== */
+
+    function scrollBottom() {
+
+      chatArea.scrollTop =
+        chatArea.scrollHeight;
+    }
+
+    /* ==================================================
+       TOAST
+    ================================================== */
+
+    let toastTimer;
+
+    function toast(text) {
+
+      const element =
+        document.getElementById(
+          "toast"
+        );
+
+      element.textContent =
+        text;
+
+      element.classList.add(
+        "show"
+      );
+
+      clearTimeout(
+        toastTimer
+      );
+
+      toastTimer =
+        setTimeout(
+          () => {
+
+            element.classList.remove(
+              "show"
+            );
+
+          },
+          2300
+        );
+    }
+
+    /* ==================================================
+       INITIALIZE
+    ================================================== */
+
+    loadTheme();
+
+    loadChats();
+
+    loadModel();
+
+    newChat();
+
+    resizeInput();
+  </script>
 
 </body>
 </html>
