@@ -1,6 +1,8 @@
-// Nexora AI — Cloudflare Worker
-// Auth + D1 Sessions + Profile + Password Change + Delete Account
-// Gemini Chat Streaming + Image Generation
+// ============================================================
+// NEXORA AI — COMPLETE CLOUDFLARE WORKER
+// Authentication + D1 + Sessions + Profile + Password Change
+// Delete Account + Gemini Chat + Gemini Image Generation
+// ============================================================
 
 const DEFAULT_MODEL = "gemini-3.6-flash";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
@@ -11,6 +13,7 @@ const MAX_INLINE_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGE_PROMPT_CHARS = 10000;
 
 const SESSION_DAYS = 30;
+const PBKDF2_ITERATIONS = 120000;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -31,9 +34,9 @@ export default {
     }
 
     try {
-      // ==============================
+      // --------------------------------------------------------
       // HEALTH
-      // ==============================
+      // --------------------------------------------------------
 
       if (url.pathname === "/api/health" && request.method === "GET") {
         return json({
@@ -44,7 +47,7 @@ export default {
           imageModel: IMAGE_MODEL,
           database: Boolean(env.DB),
           geminiKey: Boolean(env.GEMINI_API_KEY),
-          authentication: Boolean(env.DB),
+          authentication: true,
           signup: true,
           login: true,
           logout: true,
@@ -61,9 +64,24 @@ export default {
         });
       }
 
-      // ==============================
+      // --------------------------------------------------------
+      // ROOT
+      // --------------------------------------------------------
+
+      if (url.pathname === "/" && request.method === "GET") {
+        return json({
+          success: true,
+          service: "Nexora AI",
+          status: "online",
+          model: DEFAULT_MODEL,
+          imageModel: IMAGE_MODEL,
+          authentication: true
+        });
+      }
+
+      // --------------------------------------------------------
       // AUTH
-      // ==============================
+      // --------------------------------------------------------
 
       if (url.pathname === "/api/auth/signup" && request.method === "POST") {
         return await signup(request, env);
@@ -78,14 +96,10 @@ export default {
       }
 
       if (url.pathname === "/api/auth/me" && request.method === "GET") {
-        return await me(request, env);
+        return await getMe(request, env);
       }
 
-      if (url.pathname === "/api/auth/session" && request.method === "GET") {
-        return await me(request, env);
-      }
-
-      // Also support common frontend endpoint names.
+      // Compatibility endpoints
       if (url.pathname === "/api/signup" && request.method === "POST") {
         return await signup(request, env);
       }
@@ -99,77 +113,68 @@ export default {
       }
 
       if (url.pathname === "/api/me" && request.method === "GET") {
-        return await me(request, env);
+        return await getMe(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // PROFILE
-      // ==============================
+      // --------------------------------------------------------
 
-      if (
-        url.pathname === "/api/profile" &&
-        request.method === "GET"
-      ) {
-        return await profile(request, env);
+      if (url.pathname === "/api/profile" && request.method === "GET") {
+        return await getProfile(request, env);
       }
 
-      if (
-        url.pathname === "/api/profile" &&
-        (request.method === "PUT" || request.method === "POST")
-      ) {
+      if (url.pathname === "/api/profile" && request.method === "PUT") {
         return await updateProfile(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // PASSWORD
-      // ==============================
+      // --------------------------------------------------------
 
       if (
-        url.pathname === "/api/auth/password" &&
+        url.pathname === "/api/profile/password" &&
         request.method === "POST"
       ) {
         return await changePassword(request, env);
       }
 
       if (
-        url.pathname === "/api/password/change" &&
+        url.pathname === "/api/change-password" &&
         request.method === "POST"
       ) {
         return await changePassword(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // DELETE ACCOUNT
-      // ==============================
+      // --------------------------------------------------------
 
       if (
-        url.pathname === "/api/auth/delete-account" &&
+        url.pathname === "/api/profile/delete" &&
         request.method === "DELETE"
       ) {
         return await deleteAccount(request, env);
       }
 
       if (
-        url.pathname === "/api/account/delete" &&
+        url.pathname === "/api/delete-account" &&
         request.method === "DELETE"
       ) {
         return await deleteAccount(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // CHAT
-      // ==============================
+      // --------------------------------------------------------
 
-      if (
-        url.pathname === "/api/chat" &&
-        request.method === "POST"
-      ) {
+      if (url.pathname === "/api/chat" && request.method === "POST") {
         return await chat(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // IMAGE
-      // ==============================
+      // --------------------------------------------------------
 
       if (
         url.pathname === "/api/generate-image" &&
@@ -178,9 +183,9 @@ export default {
         return await generateImage(request, env);
       }
 
-      // ==============================
+      // --------------------------------------------------------
       // CLOUDFLARE ASSETS
-      // ==============================
+      // --------------------------------------------------------
 
       if (env.ASSETS) {
         const asset = await env.ASSETS.fetch(request);
@@ -201,33 +206,13 @@ export default {
             }
           );
 
-          const fallback = await env.ASSETS.fetch(
-            fallbackRequest
-          );
+          const fallback =
+            await env.ASSETS.fetch(fallbackRequest);
 
           if (fallback.status !== 404) {
             return fallback;
           }
         }
-      }
-
-      // ==============================
-      // ROOT
-      // ==============================
-
-      if (
-        url.pathname === "/" &&
-        request.method === "GET"
-      ) {
-        return json({
-          success: true,
-          service: "Nexora AI",
-          status: "online",
-          model: DEFAULT_MODEL,
-          imageModel: IMAGE_MODEL,
-          database: Boolean(env.DB),
-          authentication: Boolean(env.DB)
-        });
       }
 
       return json(
@@ -238,7 +223,6 @@ export default {
         },
         404
       );
-
     } catch (error) {
       return json(
         {
@@ -251,271 +235,50 @@ export default {
   }
 };
 
-
-// ======================================================
-// AUTH HELPERS
-// ======================================================
-
-function requireDB(env) {
-  if (!env.DB) {
-    throw new Error(
-      "D1 database binding DB is not configured."
-    );
-  }
-}
-
-function normalizeEmail(email) {
-  return String(email || "")
-    .trim()
-    .toLowerCase();
-}
-
-function normalizeName(name) {
-  return String(name || "")
-    .trim()
-    .replace(/\s+/g, " ");
-}
-
-function validEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validPassword(password) {
-  return typeof password === "string" &&
-    password.length >= 8 &&
-    password.length <= 200;
-}
-
-function getToken(request) {
-  const auth = request.headers.get("Authorization") || "";
-
-  if (auth.startsWith("Bearer ")) {
-    return auth.slice(7).trim();
-  }
-
-  const cookie = request.headers.get("Cookie") || "";
-
-  const match = cookie.match(
-    /(?:^|;\s*)nexora_session=([^;]+)/
-  );
-
-  if (match) {
-    return decodeURIComponent(match[1]);
-  }
-
-  return null;
-}
-
-function sessionCookie(token, maxAge = SESSION_DAYS * 86400) {
-  return [
-    `nexora_session=${encodeURIComponent(token)}`,
-    "Path=/",
-    `Max-Age=${maxAge}`,
-    "HttpOnly",
-    "Secure",
-    "SameSite=Lax"
-  ].join("; ");
-}
-
-function clearSessionCookie() {
-  return [
-    "nexora_session=",
-    "Path=/",
-    "Max-Age=0",
-    "HttpOnly",
-    "Secure",
-    "SameSite=Lax"
-  ].join("; ");
-}
-
-async function randomToken(bytes = 32) {
-  const data = new Uint8Array(bytes);
-  crypto.getRandomValues(data);
-
-  return Array.from(data)
-    .map(x => x.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-
-// ======================================================
-// PASSWORD HASHING
-// PBKDF2 — 100,000 iterations
-// ======================================================
-
-const PBKDF2_ITERATIONS = 100000;
-
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-
-  const salt = new Uint8Array(16);
-  crypto.getRandomValues(salt);
-
-  const keyMaterial =
-    await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits"]
-    );
-
-  const bits =
-    await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: PBKDF2_ITERATIONS,
-        hash: "SHA-256"
-      },
-      keyMaterial,
-      256
-    );
-
-  return [
-    "pbkdf2",
-    PBKDF2_ITERATIONS,
-    bytesToHex(salt),
-    bytesToHex(new Uint8Array(bits))
-  ].join("$");
-}
-
-async function verifyPassword(password, stored) {
-  try {
-    const parts = String(stored || "").split("$");
-
-    if (parts.length !== 4) {
-      return false;
-    }
-
-    if (parts[0] !== "pbkdf2") {
-      return false;
-    }
-
-    const iterations = Number(parts[1]);
-
-    const salt = hexToBytes(parts[2]);
-    const expected = hexToBytes(parts[3]);
-
-    const encoder = new TextEncoder();
-
-    const keyMaterial =
-      await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(password),
-        "PBKDF2",
-        false,
-        ["deriveBits"]
-      );
-
-    const bits =
-      await crypto.subtle.deriveBits(
-        {
-          name: "PBKDF2",
-          salt,
-          iterations,
-          hash: "SHA-256"
-        },
-        keyMaterial,
-        256
-      );
-
-    const actual = new Uint8Array(bits);
-
-    return constantTimeEqual(actual, expected);
-
-  } catch {
-    return false;
-  }
-}
-
-function bytesToHex(bytes) {
-  return Array.from(bytes)
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function hexToBytes(hex) {
-  if (!hex || hex.length % 2 !== 0) {
-    throw new Error("Invalid hexadecimal data.");
-  }
-
-  const result = new Uint8Array(hex.length / 2);
-
-  for (let i = 0; i < result.length; i++) {
-    result[i] = parseInt(
-      hex.slice(i * 2, i * 2 + 2),
-      16
-    );
-  }
-
-  return result;
-}
-
-function constantTimeEqual(a, b) {
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  let result = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    result |= a[i] ^ b[i];
-  }
-
-  return result === 0;
-}
-
-
-// ======================================================
-// USER RESPONSE
-// ======================================================
-
-function publicUser(user) {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatar: user.avatar || null,
-    created_at: user.created_at
-  };
-}
-
-
-// ======================================================
+// ============================================================
 // SIGNUP
-// ======================================================
+// ============================================================
 
 async function signup(request, env) {
-  requireDB(env);
-
-  const body = await readJSON(request);
-
-  const name = normalizeName(
-    body?.name ||
-    body?.username ||
-    "Nexora User"
-  );
-
-  const email = normalizeEmail(
-    body?.email
-  );
-
-  const password = String(
-    body?.password || ""
-  );
-
-  if (name.length < 2 || name.length > 80) {
+  if (!env.DB) {
     return json(
       {
         success: false,
-        error: "Please enter a valid name."
+        error: "D1 database binding DB is not configured."
+      },
+      500
+    );
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch {
+    return json(
+      {
+        success: false,
+        error: "Invalid JSON request."
       },
       400
     );
   }
 
-  if (!validEmail(email)) {
+  const name = String(body?.name || "").trim();
+  const email = normalizeEmail(body?.email);
+  const password = String(body?.password || "");
+
+  if (!name) {
+    return json(
+      {
+        success: false,
+        error: "Name is required."
+      },
+      400
+    );
+  }
+
+  if (!isValidEmail(email)) {
     return json(
       {
         success: false,
@@ -525,70 +288,62 @@ async function signup(request, env) {
     );
   }
 
-  if (!validPassword(password)) {
+  if (password.length < 6) {
     return json(
       {
         success: false,
-        error:
-          "Password must be 8–200 characters long."
+        error: "Password must be at least 6 characters."
       },
       400
     );
   }
 
-  const existing =
-    await env.DB.prepare(
-      "SELECT id FROM users WHERE email = ? LIMIT 1"
+  const existing = await env.DB
+    .prepare(
+      "SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1"
     )
-      .bind(email)
-      .first();
+    .bind(email)
+    .first();
 
   if (existing) {
     return json(
       {
         success: false,
-        error:
-          "An account with this email already exists."
+        error: "An account with this email already exists."
       },
       409
     );
   }
 
-  const passwordHash =
-    await hashPassword(password);
-
-  const createdAt = Date.now();
+  const passwordHash = await hashPassword(password);
+  const now = Date.now();
 
   let result;
 
   try {
-    result =
-      await env.DB.prepare(
+    result = await env.DB
+      .prepare(
         `INSERT INTO users
-        (name, email, password_hash, created_at)
-        VALUES (?, ?, ?, ?)`
+         (name, email, password_hash, created_at)
+         VALUES (?, ?, ?, ?)`
       )
-        .bind(
-          name,
-          email,
-          passwordHash,
-          createdAt
-        )
-        .run();
-
+      .bind(
+        name,
+        email,
+        passwordHash,
+        now
+      )
+      .run();
   } catch (error) {
-    const message =
-      String(error?.message || "");
-
     if (
-      message.toLowerCase().includes("unique") ||
-      message.toLowerCase().includes("constraint")
+      String(error?.message || "")
+        .toLowerCase()
+        .includes("unique")
     ) {
       return json(
         {
           success: false,
-          error:
-            "An account with this email already exists."
+          error: "An account with this email already exists."
         },
         409
       );
@@ -604,221 +359,161 @@ async function signup(request, env) {
     return json(
       {
         success: false,
-        error: "Unable to create account."
+        error: "Account was created but user ID was not returned."
       },
       500
     );
   }
 
-  const user =
-    await env.DB.prepare(
-      `SELECT id, name, email, created_at
-       FROM users
-       WHERE id = ?`
-    )
-      .bind(userId)
-      .first();
-
-  const token =
-    await randomToken(32);
-
-  const expiresAt =
-    Date.now() +
-    SESSION_DAYS * 86400 * 1000;
-
-  await env.DB.prepare(
-    `INSERT INTO sessions
-    (id, user_id, expires_at, created_at)
-    VALUES (?, ?, ?, ?)`
-  )
-    .bind(
-      token,
-      userId,
-      expiresAt,
-      createdAt
-    )
-    .run();
-
-  return json(
-    {
-      success: true,
-      message: "Account created successfully.",
-      user: publicUser(user),
-      session: {
-        expiresAt
-      }
-    },
-    201,
-    {
-      "Set-Cookie": sessionCookie(token)
-    }
+  const token = await createSession(
+    env,
+    userId
   );
+
+  return json({
+    success: true,
+    message: "Account created successfully.",
+    token,
+    user: {
+      id: userId,
+      name,
+      email
+    }
+  });
 }
 
-
-// ======================================================
+// ============================================================
 // LOGIN
-// ======================================================
+// ============================================================
 
 async function login(request, env) {
-  requireDB(env);
-
-  const body = await readJSON(request);
-
-  const email =
-    normalizeEmail(body?.email);
-
-  const password =
-    String(body?.password || "");
-
-  if (!validEmail(email) || !password) {
+  if (!env.DB) {
     return json(
       {
         success: false,
-        error: "Invalid email or password."
+        error: "D1 database binding DB is not configured."
+      },
+      500
+    );
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch {
+    return json(
+      {
+        success: false,
+        error: "Invalid JSON request."
+      },
+      400
+    );
+  }
+
+  const email = normalizeEmail(body?.email);
+  const password = String(body?.password || "");
+
+  if (!isValidEmail(email) || !password) {
+    return json(
+      {
+        success: false,
+        error: "Invalid email or password"
       },
       401
     );
   }
 
-  const user =
-    await env.DB.prepare(
+  const user = await env.DB
+    .prepare(
       `SELECT id, name, email, password_hash, created_at
        FROM users
-       WHERE email = ?
+       WHERE LOWER(email) = LOWER(?)
        LIMIT 1`
     )
-      .bind(email)
-      .first();
+    .bind(email)
+    .first();
 
   if (!user) {
     return json(
       {
         success: false,
-        error: "Invalid email or password."
+        error: "Invalid email or password"
       },
       401
     );
   }
 
-  const valid =
-    await verifyPassword(
-      password,
-      user.password_hash
-    );
+  const valid = await verifyPassword(
+    password,
+    String(user.password_hash || "")
+  );
 
   if (!valid) {
     return json(
       {
         success: false,
-        error: "Invalid email or password."
+        error: "Invalid email or password"
       },
       401
     );
   }
 
-  const token =
-    await randomToken(32);
-
-  const now = Date.now();
-
-  const expiresAt =
-    now +
-    SESSION_DAYS * 86400 * 1000;
-
-  await env.DB.prepare(
-    `INSERT INTO sessions
-    (id, user_id, expires_at, created_at)
-    VALUES (?, ?, ?, ?)`
-  )
-    .bind(
-      token,
-      user.id,
-      expiresAt,
-      now
-    )
-    .run();
-
-  return json(
-    {
-      success: true,
-      message: "Login successful.",
-      user: publicUser(user),
-      session: {
-        expiresAt
-      }
-    },
-    200,
-    {
-      "Set-Cookie": sessionCookie(token)
-    }
+  const token = await createSession(
+    env,
+    user.id
   );
+
+  return json({
+    success: true,
+    message: "Login successful.",
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      created_at: user.created_at
+    }
+  });
 }
 
+// ============================================================
+// LOGOUT
+// ============================================================
 
-// ======================================================
-// SESSION
-// ======================================================
-
-async function getCurrentUser(request, env) {
-  requireDB(env);
-
+async function logout(request, env) {
   const token = getToken(request);
 
-  if (!token) {
-    return null;
+  if (token && env.DB) {
+    await env.DB
+      .prepare(
+        "DELETE FROM sessions WHERE id = ?"
+      )
+      .bind(token)
+      .run();
   }
 
-  const now = Date.now();
-
-  const row =
-    await env.DB.prepare(
-      `SELECT
-        sessions.id AS session_id,
-        sessions.expires_at,
-        users.id,
-        users.name,
-        users.email,
-        users.created_at
-       FROM sessions
-       INNER JOIN users
-       ON users.id = sessions.user_id
-       WHERE sessions.id = ?
-       AND sessions.expires_at > ?
-       LIMIT 1`
-    )
-      .bind(token, now)
-      .first();
-
-  if (!row) {
-    return null;
-  }
-
-  return {
-    token,
-    expiresAt: row.expires_at,
-    user: {
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      created_at: row.created_at
-    }
-  };
+  return json({
+    success: true,
+    message: "Logged out successfully."
+  });
 }
 
-async function me(request, env) {
-  const auth =
-    await getCurrentUser(
-      request,
-      env
-    );
+// ============================================================
+// ME
+// ============================================================
 
-  if (!auth) {
+async function getMe(request, env) {
+  const auth = await authenticate(
+    request,
+    env
+  );
+
+  if (!auth.ok) {
     return json(
       {
         success: false,
-        authenticated: false,
-        user: null
+        error: "Not authenticated."
       },
       401
     );
@@ -827,57 +522,21 @@ async function me(request, env) {
   return json({
     success: true,
     authenticated: true,
-    user: publicUser(auth.user),
-    session: {
-      expiresAt: auth.expiresAt
-    }
+    user: auth.user
   });
 }
 
+// ============================================================
+// PROFILE GET
+// ============================================================
 
-// ======================================================
-// LOGOUT
-// ======================================================
-
-async function logout(request, env) {
-  requireDB(env);
-
-  const token =
-    getToken(request);
-
-  if (token) {
-    await env.DB.prepare(
-      "DELETE FROM sessions WHERE id = ?"
-    )
-      .bind(token)
-      .run();
-  }
-
-  return json(
-    {
-      success: true,
-      message: "Logged out successfully."
-    },
-    200,
-    {
-      "Set-Cookie": clearSessionCookie()
-    }
+async function getProfile(request, env) {
+  const auth = await authenticate(
+    request,
+    env
   );
-}
 
-
-// ======================================================
-// PROFILE
-// ======================================================
-
-async function profile(request, env) {
-  const auth =
-    await getCurrentUser(
-      request,
-      env
-    );
-
-  if (!auth) {
+  if (!auth.ok) {
     return json(
       {
         success: false,
@@ -889,23 +548,21 @@ async function profile(request, env) {
 
   return json({
     success: true,
-    user: publicUser(auth.user)
+    user: auth.user
   });
 }
 
-
-// ======================================================
-// UPDATE PROFILE
-// ======================================================
+// ============================================================
+// PROFILE UPDATE
+// ============================================================
 
 async function updateProfile(request, env) {
-  const auth =
-    await getCurrentUser(
-      request,
-      env
-    );
+  const auth = await authenticate(
+    request,
+    env
+  );
 
-  if (!auth) {
+  if (!auth.ok) {
     return json(
       {
         success: false,
@@ -915,63 +572,108 @@ async function updateProfile(request, env) {
     );
   }
 
-  const body =
-    await readJSON(request);
+  let body;
 
-  const name =
-    normalizeName(body?.name);
-
-  if (
-    name.length < 2 ||
-    name.length > 80
-  ) {
+  try {
+    body = await request.json();
+  } catch {
     return json(
       {
         success: false,
-        error: "Please enter a valid name."
+        error: "Invalid JSON request."
       },
       400
     );
   }
 
-  await env.DB.prepare(
-    "UPDATE users SET name = ? WHERE id = ?"
-  )
+  const name =
+    String(body?.name ?? "")
+      .trim();
+
+  const email =
+    normalizeEmail(
+      body?.email ?? auth.user.email
+    );
+
+  if (!name) {
+    return json(
+      {
+        success: false,
+        error: "Name is required."
+      },
+      400
+    );
+  }
+
+  if (!isValidEmail(email)) {
+    return json(
+      {
+        success: false,
+        error: "Invalid email address."
+      },
+      400
+    );
+  }
+
+  const duplicate = await env.DB
+    .prepare(
+      `SELECT id
+       FROM users
+       WHERE LOWER(email) = LOWER(?)
+       AND id != ?
+       LIMIT 1`
+    )
+    .bind(
+      email,
+      auth.user.id
+    )
+    .first();
+
+  if (duplicate) {
+    return json(
+      {
+        success: false,
+        error: "That email is already in use."
+      },
+      409
+    );
+  }
+
+  await env.DB
+    .prepare(
+      `UPDATE users
+       SET name = ?, email = ?
+       WHERE id = ?`
+    )
     .bind(
       name,
+      email,
       auth.user.id
     )
     .run();
 
-  const updated =
-    await env.DB.prepare(
-      `SELECT id, name, email, created_at
-       FROM users
-       WHERE id = ?`
-    )
-      .bind(auth.user.id)
-      .first();
-
   return json({
     success: true,
-    message: "Profile updated successfully.",
-    user: publicUser(updated)
+    message: "Profile updated.",
+    user: {
+      ...auth.user,
+      name,
+      email
+    }
   });
 }
 
-
-// ======================================================
-// CHANGE PASSWORD
-// ======================================================
+// ============================================================
+// PASSWORD CHANGE
+// ============================================================
 
 async function changePassword(request, env) {
-  const auth =
-    await getCurrentUser(
-      request,
-      env
-    );
+  const auth = await authenticate(
+    request,
+    env
+  );
 
-  if (!auth) {
+  if (!auth.ok) {
     return json(
       {
         success: false,
@@ -981,8 +683,19 @@ async function changePassword(request, env) {
     );
   }
 
-  const body =
-    await readJSON(request);
+  let body;
+
+  try {
+    body = await request.json();
+  } catch {
+    return json(
+      {
+        success: false,
+        error: "Invalid JSON request."
+      },
+      400
+    );
+  }
 
   const currentPassword =
     String(
@@ -998,43 +711,30 @@ async function changePassword(request, env) {
       ""
     );
 
-  if (
-    !validPassword(newPassword)
-  ) {
+  if (!currentPassword || !newPassword) {
     return json(
       {
         success: false,
-        error:
-          "New password must be 8–200 characters long."
+        error: "Current and new password are required."
       },
       400
     );
   }
 
-  const user =
-    await env.DB.prepare(
-      `SELECT id, password_hash
-       FROM users
-       WHERE id = ?
-       LIMIT 1`
-    )
-      .bind(auth.user.id)
-      .first();
-
-  if (!user) {
+  if (newPassword.length < 6) {
     return json(
       {
         success: false,
-        error: "User account not found."
+        error: "New password must be at least 6 characters."
       },
-      404
+      400
     );
   }
 
   const valid =
     await verifyPassword(
       currentPassword,
-      user.password_hash
+      String(auth.user.password_hash || "")
     );
 
   if (!valid) {
@@ -1052,76 +752,50 @@ async function changePassword(request, env) {
       newPassword
     );
 
-  await env.DB.prepare(
-    `UPDATE users
-     SET password_hash = ?
-     WHERE id = ?`
-  )
+  await env.DB
+    .prepare(
+      `UPDATE users
+       SET password_hash = ?
+       WHERE id = ?`
+    )
     .bind(
       newHash,
       auth.user.id
     )
     .run();
 
-  // Revoke all previous sessions.
-  await env.DB.prepare(
-    "DELETE FROM sessions WHERE user_id = ?"
-  )
+  // Revoke all old sessions
+  await env.DB
+    .prepare(
+      "DELETE FROM sessions WHERE user_id = ?"
+    )
     .bind(auth.user.id)
     .run();
 
-  // Create fresh session.
   const token =
-    await randomToken(32);
-
-  const now = Date.now();
-
-  const expiresAt =
-    now +
-    SESSION_DAYS * 86400 * 1000;
-
-  await env.DB.prepare(
-    `INSERT INTO sessions
-    (id, user_id, expires_at, created_at)
-    VALUES (?, ?, ?, ?)`
-  )
-    .bind(
-      token,
-      auth.user.id,
-      expiresAt,
-      now
-    )
-    .run();
-
-  return json(
-    {
-      success: true,
-      message:
-        "Password changed successfully.",
-      session: {
-        expiresAt
-      }
-    },
-    200,
-    {
-      "Set-Cookie": sessionCookie(token)
-    }
-  );
-}
-
-
-// ======================================================
-// DELETE ACCOUNT
-// ======================================================
-
-async function deleteAccount(request, env) {
-  const auth =
-    await getCurrentUser(
-      request,
-      env
+    await createSession(
+      env,
+      auth.user.id
     );
 
-  if (!auth) {
+  return json({
+    success: true,
+    message: "Password changed successfully.",
+    token
+  });
+}
+
+// ============================================================
+// DELETE ACCOUNT
+// ============================================================
+
+async function deleteAccount(request, env) {
+  const auth = await authenticate(
+    request,
+    env
+  );
+
+  if (!auth.ok) {
     return json(
       {
         success: false,
@@ -1131,86 +805,417 @@ async function deleteAccount(request, env) {
     );
   }
 
-  const body =
-    await readJSON(request);
+  let body = {};
+
+  try {
+    body = await request.json();
+  } catch {}
 
   const password =
     String(
       body?.password || ""
     );
 
-  const user =
-    await env.DB.prepare(
-      `SELECT id, password_hash
-       FROM users
-       WHERE id = ?
-       LIMIT 1`
-    )
-      .bind(auth.user.id)
-      .first();
+  if (password) {
+    const valid =
+      await verifyPassword(
+        password,
+        String(auth.user.password_hash || "")
+      );
 
-  if (!user) {
-    return json(
-      {
-        success: false,
-        error: "User account not found."
-      },
-      404
-    );
-  }
-
-  const valid =
-    await verifyPassword(
-      password,
-      user.password_hash
-    );
-
-  if (!valid) {
-    return json(
-      {
-        success: false,
-        error: "Password is incorrect."
-      },
-      401
-    );
-  }
-
-  await env.DB.prepare(
-    "DELETE FROM sessions WHERE user_id = ?"
-  )
-    .bind(auth.user.id)
-    .run();
-
-  await env.DB.prepare(
-    "DELETE FROM users WHERE id = ?"
-  )
-    .bind(auth.user.id)
-    .run();
-
-  return json(
-    {
-      success: true,
-      message: "Account deleted successfully."
-    },
-    200,
-    {
-      "Set-Cookie": clearSessionCookie()
+    if (!valid) {
+      return json(
+        {
+          success: false,
+          error: "Incorrect password."
+        },
+        401
+      );
     }
-  );
+  }
+
+  await env.DB
+    .prepare(
+      "DELETE FROM sessions WHERE user_id = ?"
+    )
+    .bind(auth.user.id)
+    .run();
+
+  await env.DB
+    .prepare(
+      "DELETE FROM users WHERE id = ?"
+    )
+    .bind(auth.user.id)
+    .run();
+
+  return json({
+    success: true,
+    message: "Account deleted successfully."
+  });
 }
 
+// ============================================================
+// AUTHENTICATION
+// ============================================================
 
-// ======================================================
-// CHAT
-// ======================================================
+async function authenticate(request, env) {
+  if (!env.DB) {
+    return {
+      ok: false,
+      error: "Database not configured."
+    };
+  }
+
+  const token =
+    getToken(request);
+
+  if (!token) {
+    return {
+      ok: false,
+      error: "No session."
+    };
+  }
+
+  const now =
+    Date.now();
+
+  const session =
+    await env.DB
+      .prepare(
+        `SELECT
+          s.id AS session_id,
+          s.user_id,
+          s.expires_at,
+          u.id,
+          u.name,
+          u.email,
+          u.password_hash,
+          u.created_at
+         FROM sessions s
+         INNER JOIN users u
+           ON u.id = s.user_id
+         WHERE s.id = ?
+         LIMIT 1`
+      )
+      .bind(token)
+      .first();
+
+  if (!session) {
+    return {
+      ok: false,
+      error: "Invalid session."
+    };
+  }
+
+  if (
+    Number(session.expires_at) <= now
+  ) {
+    await env.DB
+      .prepare(
+        "DELETE FROM sessions WHERE id = ?"
+      )
+      .bind(token)
+      .run();
+
+    return {
+      ok: false,
+      error: "Session expired."
+    };
+  }
+
+  return {
+    ok: true,
+    token,
+    user: {
+      id: session.id,
+      name: session.name,
+      email: session.email,
+      password_hash: session.password_hash,
+      created_at: session.created_at
+    }
+  };
+}
+
+// ============================================================
+// SESSION
+// ============================================================
+
+async function createSession(env, userId) {
+  const token =
+    randomToken();
+
+  const now =
+    Date.now();
+
+  const expiresAt =
+    now +
+    SESSION_DAYS *
+    24 *
+    60 *
+    60 *
+    1000;
+
+  await env.DB
+    .prepare(
+      `INSERT INTO sessions
+       (id, user_id, expires_at, created_at)
+       VALUES (?, ?, ?, ?)`
+    )
+    .bind(
+      token,
+      userId,
+      expiresAt,
+      now
+    )
+    .run();
+
+  return token;
+}
+
+function getToken(request) {
+  const authorization =
+    request.headers.get("Authorization") ||
+    "";
+
+  if (
+    authorization
+      .toLowerCase()
+      .startsWith("bearer ")
+  ) {
+    return authorization
+      .slice(7)
+      .trim();
+  }
+
+  const cookie =
+    request.headers.get("Cookie") ||
+    "";
+
+  const match =
+    cookie.match(
+      /(?:^|;\s*)nexora_session=([^;]+)/
+    );
+
+  if (match) {
+    return decodeURIComponent(
+      match[1]
+    );
+  }
+
+  return null;
+}
+
+function randomToken() {
+  const bytes =
+    new Uint8Array(32);
+
+  crypto.getRandomValues(bytes);
+
+  return bytesToBase64Url(bytes);
+}
+
+// ============================================================
+// PASSWORD HASHING
+// ============================================================
+
+async function hashPassword(password) {
+  const salt =
+    new Uint8Array(16);
+
+  crypto.getRandomValues(salt);
+
+  const key =
+    await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      {
+        name: "PBKDF2"
+      },
+      false,
+      [
+        "deriveBits"
+      ]
+    );
+
+  const bits =
+    await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations: PBKDF2_ITERATIONS,
+        hash: "SHA-256"
+      },
+      key,
+      256
+    );
+
+  const hash =
+    new Uint8Array(bits);
+
+  return [
+    "pbkdf2",
+    PBKDF2_ITERATIONS,
+    bytesToBase64Url(salt),
+    bytesToBase64Url(hash)
+  ].join("$");
+}
+
+async function verifyPassword(
+  password,
+  stored
+) {
+  if (!password || !stored) {
+    return false;
+  }
+
+  // New Nexora PBKDF2 format
+  if (
+    stored.startsWith("pbkdf2$")
+  ) {
+    try {
+      const parts =
+        stored.split("$");
+
+      if (parts.length !== 4) {
+        return false;
+      }
+
+      const iterations =
+        Number(parts[1]);
+
+      const salt =
+        base64UrlToBytes(parts[2]);
+
+      const expected =
+        base64UrlToBytes(parts[3]);
+
+      if (
+        !iterations ||
+        !salt.length ||
+        !expected.length
+      ) {
+        return false;
+      }
+
+      const key =
+        await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(password),
+          {
+            name: "PBKDF2"
+          },
+          false,
+          [
+            "deriveBits"
+          ]
+        );
+
+      const bits =
+        await crypto.subtle.deriveBits(
+          {
+            name: "PBKDF2",
+            salt,
+            iterations,
+            hash: "SHA-256"
+          },
+          key,
+          expected.length * 8
+        );
+
+      const actual =
+        new Uint8Array(bits);
+
+      return constantTimeEqual(
+        actual,
+        expected
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // Legacy SHA-256 formats
+  // Allows migration of older Nexora accounts.
+  try {
+    const encoder =
+      new TextEncoder();
+
+    const digest =
+      new Uint8Array(
+        await crypto.subtle.digest(
+          "SHA-256",
+          encoder.encode(password)
+        )
+      );
+
+    const hex =
+      bytesToHex(digest);
+
+    const base64 =
+      bytesToBase64(digest);
+
+    const base64url =
+      bytesToBase64Url(digest);
+
+    const candidates = [
+      hex,
+      hex.toLowerCase(),
+      base64,
+      base64url
+    ];
+
+    if (
+      candidates.includes(
+        stored
+      )
+    ) {
+      return true;
+    }
+  } catch {}
+
+  // Legacy SHA-256 with common prefixes
+  try {
+    const legacyCandidates = [
+      "sha256:" + bytesToHex(
+        new Uint8Array(
+          await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(password)
+          )
+        )
+      ),
+      "sha256$" + bytesToHex(
+        new Uint8Array(
+          await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(password)
+          )
+        )
+      )
+    ];
+
+    if (
+      legacyCandidates.includes(
+        stored
+      )
+    ) {
+      return true;
+    }
+  } catch {}
+
+  return false;
+}
+
+// ============================================================
+// GEMINI CHAT
+// ============================================================
 
 async function chat(request, env) {
   if (!env.GEMINI_API_KEY) {
     return json(
       {
         success: false,
-        error:
-          "GEMINI_API_KEY is not configured."
+        error: "GEMINI_API_KEY is not configured."
       },
       500
     );
@@ -1252,11 +1257,14 @@ async function chat(request, env) {
 
   if (Array.isArray(body?.history)) {
     const history =
-      body.history.slice(-MAX_HISTORY);
+      body.history.slice(
+        -MAX_HISTORY
+      );
 
     for (const item of history) {
       const role =
-        item?.role === "assistant"
+        item?.role === "assistant" ||
+        item?.role === "model"
           ? "model"
           : "user";
 
@@ -1269,7 +1277,11 @@ async function chat(request, env) {
 
       contents.push({
         role,
-        parts: [{ text }]
+        parts: [
+          {
+            text
+          }
+        ]
       });
     }
   }
@@ -1280,20 +1292,24 @@ async function chat(request, env) {
     }
   ];
 
-  // Direct image.
+  // Image
   if (
     body?.image?.data &&
     body?.image?.mimeType
   ) {
     const mimeType =
-      String(body.image.mimeType);
+      String(
+        body.image.mimeType
+      );
 
     const data =
-      String(body.image.data);
+      String(
+        body.image.data
+      );
 
     if (
       mimeType.startsWith("image/") &&
-      data.length > 0
+      data.length
     ) {
       parts.push({
         inlineData: {
@@ -1304,7 +1320,7 @@ async function chat(request, env) {
     }
   }
 
-  // File.
+  // File
   const file =
     body?.file;
 
@@ -1312,10 +1328,106 @@ async function chat(request, env) {
     file?.data &&
     file?.mimeType
   ) {
-    await addFileParts(
-      parts,
-      file
-    );
+    const mimeType =
+      String(
+        file.mimeType
+      );
+
+    const fileData =
+      String(
+        file.data
+      );
+
+    const fileName =
+      String(
+        file.name ||
+        "uploaded-file"
+      );
+
+    const estimatedBytes =
+      Math.floor(
+        fileData.length * 0.75
+      );
+
+    if (
+      estimatedBytes >
+      MAX_INLINE_FILE_BYTES
+    ) {
+      return json(
+        {
+          success: false,
+          error: "File is too large."
+        },
+        413
+      );
+    }
+
+    if (
+      mimeType ===
+      "application/pdf"
+    ) {
+      parts.push({
+        text:
+          `The user uploaded a PDF named "${fileName}". Analyze it carefully and answer using its contents.`
+      });
+
+      parts.push({
+        inlineData: {
+          mimeType,
+          data: fileData
+        }
+      });
+    } else if (
+      mimeType.startsWith("image/")
+    ) {
+      parts.push({
+        inlineData: {
+          mimeType,
+          data: fileData
+        }
+      });
+    } else if (
+      isTextFile(
+        mimeType,
+        fileName
+      )
+    ) {
+      try {
+        let decoded =
+          decodeBase64Utf8(
+            fileData
+          );
+
+        decoded =
+          decoded.slice(
+            0,
+            MAX_TEXT_FILE_CHARS
+          );
+
+        parts.push({
+          text:
+            `Uploaded file: ${fileName}\n\nFile content:\n${decoded}`
+        });
+      } catch {
+        parts.push({
+          text:
+            `The uploaded file "${fileName}" could not be decoded.`
+        });
+      }
+    } else if (
+      mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
+      parts.push({
+        text:
+          `The user uploaded a DOCX named "${fileName}". Direct DOCX extraction is not enabled.`
+      });
+    } else {
+      parts.push({
+        text:
+          `The user uploaded "${fileName}" with MIME type ${mimeType}.`
+      });
+    }
   }
 
   contents.push({
@@ -1376,10 +1488,10 @@ Give original responses suited to the current request.
       env.GEMINI_API_KEY
     );
 
-  let response;
+  let geminiResponse;
 
   try {
-    response =
+    geminiResponse =
       await fetch(
         endpoint,
         {
@@ -1399,7 +1511,6 @@ Give original responses suited to the current request.
           })
         }
       );
-
   } catch (error) {
     return json(
       {
@@ -1412,21 +1523,20 @@ Give original responses suited to the current request.
     );
   }
 
-  if (!response.ok) {
+  if (!geminiResponse.ok) {
     const errorText =
-      await response.text();
+      await geminiResponse.text();
 
     let errorMessage =
       "Gemini API request failed.";
 
     try {
-      const errorJSON =
+      const parsed =
         JSON.parse(errorText);
 
       errorMessage =
-        errorJSON?.error?.message ||
+        parsed?.error?.message ||
         errorMessage;
-
     } catch {}
 
     return json(
@@ -1435,176 +1545,97 @@ Give original responses suited to the current request.
         error: errorMessage,
         model
       },
-      response.status
+      geminiResponse.status
     );
   }
 
-  if (!response.body) {
+  if (!geminiResponse.body) {
     return json(
       {
         success: false,
-        error:
-          "Gemini returned an empty response stream."
+        error: "Gemini returned an empty stream."
       },
       502
     );
   }
 
+  const encoder =
+    new TextEncoder();
+
+  const reader =
+    geminiResponse
+      .body
+      .getReader();
+
+  const stream =
+    new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const {
+              value,
+              done
+            } = await reader.read();
+
+            if (done) break;
+
+            if (value) {
+              controller.enqueue(
+                encoder.encode(
+                  new TextDecoder().decode(
+                    value
+                  )
+                )
+              );
+            }
+          }
+        } catch (error) {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                error:
+                  error?.message ||
+                  "Streaming error."
+              })}\n\n`
+            )
+          );
+        } finally {
+          try {
+            reader.releaseLock();
+          } catch {}
+
+          controller.close();
+        }
+      }
+    });
+
   return new Response(
-    response.body,
+    stream,
     {
       status: 200,
       headers: {
         ...CORS,
         "Content-Type":
           "text/event-stream; charset=utf-8",
-        "X-Accel-Buffering": "no",
-        "Connection": "keep-alive"
+        "X-Accel-Buffering":
+          "no",
+        "Connection":
+          "keep-alive"
       }
     }
   );
 }
 
-
-// ======================================================
-// FILE PROCESSING
-// ======================================================
-
-async function addFileParts(parts, file) {
-  const mimeType =
-    String(file.mimeType);
-
-  const fileData =
-    String(file.data);
-
-  const fileName =
-    String(
-      file.name ||
-      "uploaded-file"
-    );
-
-  const estimatedBytes =
-    Math.floor(
-      fileData.length * 0.75
-    );
-
-  if (
-    estimatedBytes >
-    MAX_INLINE_FILE_BYTES
-  ) {
-    throw new Error(
-      "File is too large. Please upload a smaller file."
-    );
-  }
-
-  if (
-    mimeType ===
-    "application/pdf"
-  ) {
-    parts.push({
-      text:
-        "The user uploaded a PDF named " +
-        fileName +
-        ". Analyze the document carefully and answer using its contents."
-    });
-
-    parts.push({
-      inlineData: {
-        mimeType,
-        data: fileData
-      }
-    });
-
-    return;
-  }
-
-  if (
-    mimeType.startsWith("image/")
-  ) {
-    parts.push({
-      inlineData: {
-        mimeType,
-        data: fileData
-      }
-    });
-
-    return;
-  }
-
-  if (
-    isTextFile(
-      mimeType,
-      fileName
-    )
-  ) {
-    let decodedText = "";
-
-    try {
-      decodedText =
-        decodeBase64Utf8(
-          fileData
-        );
-    } catch {
-      decodedText = "";
-    }
-
-    if (decodedText) {
-      decodedText =
-        decodedText.slice(
-          0,
-          MAX_TEXT_FILE_CHARS
-        );
-
-      parts.push({
-        text:
-          "Uploaded file: " +
-          fileName +
-          "\n\n" +
-          "File content:\n" +
-          decodedText
-      });
-    }
-
-    return;
-  }
-
-  if (
-    mimeType ===
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
-    parts.push({
-      text:
-        "The user uploaded a DOCX document named " +
-        fileName +
-        ". Direct DOCX extraction is not enabled. " +
-        "If possible, upload the document as PDF or TXT."
-    });
-
-    return;
-  }
-
-  parts.push({
-    text:
-      "The user uploaded a file named " +
-      fileName +
-      " with MIME type " +
-      mimeType +
-      ". This file format is not directly supported."
-  });
-}
-
-
-// ======================================================
-// IMAGE GENERATION
-// ======================================================
+// ============================================================
+// GEMINI IMAGE GENERATION
+// ============================================================
 
 async function generateImage(request, env) {
   if (!env.GEMINI_API_KEY) {
     return json(
       {
         success: false,
-        error:
-          "GEMINI_API_KEY is not configured."
+        error: "GEMINI_API_KEY is not configured."
       },
       500
     );
@@ -1613,8 +1644,7 @@ async function generateImage(request, env) {
   let body;
 
   try {
-    body =
-      await request.json();
+    body = await request.json();
   } catch {
     return json(
       {
@@ -1696,7 +1726,6 @@ async function generateImage(request, env) {
           })
         }
       );
-
   } catch (error) {
     return json(
       {
@@ -1717,21 +1746,19 @@ async function generateImage(request, env) {
       "Image generation failed.";
 
     try {
-      const errorJSON =
+      const parsed =
         JSON.parse(errorText);
 
       errorMessage =
-        errorJSON?.error?.message ||
-        errorJSON?.message ||
+        parsed?.error?.message ||
+        parsed?.message ||
         errorMessage;
-
     } catch {}
 
     return json(
       {
         success: false,
-        error: errorMessage,
-        model: IMAGE_MODEL
+        error: errorMessage
       },
       response.status
     );
@@ -1740,14 +1767,12 @@ async function generateImage(request, env) {
   let data;
 
   try {
-    data =
-      await response.json();
+    data = await response.json();
   } catch {
     return json(
       {
         success: false,
-        error:
-          "Image API returned invalid JSON."
+        error: "Image API returned invalid JSON."
       },
       502
     );
@@ -1800,9 +1825,7 @@ async function generateImage(request, env) {
         }
       }
 
-      if (imageData) {
-        break;
-      }
+      if (imageData) break;
     }
   }
 
@@ -1833,10 +1856,9 @@ async function generateImage(request, env) {
   });
 }
 
-
-// ======================================================
+// ============================================================
 // TEXT FILE
-// ======================================================
+// ============================================================
 
 function isTextFile(
   mimeType,
@@ -1865,7 +1887,9 @@ function isTextFile(
       "application/javascript"
     ]);
 
-  if (textTypes.has(type)) {
+  if (
+    textTypes.has(type)
+  ) {
     return true;
   }
 
@@ -1881,16 +1905,58 @@ function isTextFile(
   ];
 
   return extensions.some(
-    ext => name.endsWith(ext)
+    ext =>
+      name.endsWith(ext)
   );
 }
 
+// ============================================================
+// BASE64
+// ============================================================
 
-// ======================================================
-// BASE64 UTF-8
-// ======================================================
+function bytesToBase64(bytes) {
+  let binary = "";
 
-function decodeBase64Utf8(base64) {
+  const chunk = 0x8000;
+
+  for (
+    let i = 0;
+    i < bytes.length;
+    i += chunk
+  ) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(
+        i,
+        Math.min(
+          i + chunk,
+          bytes.length
+        )
+      )
+    );
+  }
+
+  return btoa(binary);
+}
+
+function bytesToBase64Url(bytes) {
+  return bytesToBase64(bytes)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value) {
+  let base64 =
+    String(value)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+  while (
+    base64.length % 4
+  ) {
+    base64 += "=";
+  }
+
   const binary =
     atob(base64);
 
@@ -1908,30 +1974,93 @@ function decodeBase64Utf8(base64) {
       binary.charCodeAt(i);
   }
 
+  return bytes;
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes)
+    .map(
+      b =>
+        b.toString(16)
+          .padStart(2, "0")
+    )
+    .join("");
+}
+
+// ============================================================
+// UTF-8 BASE64 DECODER
+// ============================================================
+
+function decodeBase64Utf8(base64) {
   return new TextDecoder(
     "utf-8"
-  ).decode(bytes);
+  ).decode(
+    base64UrlToBytes(
+      String(base64)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "")
+    )
+  );
 }
 
+// ============================================================
+// CONSTANT-TIME COMPARE
+// ============================================================
 
-// ======================================================
-// JSON HELPERS
-// ======================================================
-
-async function readJSON(request) {
-  try {
-    return await request.json();
-  } catch {
-    throw new Error(
-      "Invalid JSON request."
-    );
+function constantTimeEqual(a, b) {
+  if (
+    !(a instanceof Uint8Array) ||
+    !(b instanceof Uint8Array)
+  ) {
+    return false;
   }
+
+  if (
+    a.length !== b.length
+  ) {
+    return false;
+  }
+
+  let result = 0;
+
+  for (
+    let i = 0;
+    i < a.length;
+    i++
+  ) {
+    result |=
+      a[i] ^ b[i];
+  }
+
+  return result === 0;
 }
+
+// ============================================================
+// EMAIL
+// ============================================================
+
+function normalizeEmail(email) {
+  return String(
+    email || ""
+  )
+    .trim()
+    .toLowerCase();
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    email
+  );
+}
+
+// ============================================================
+// JSON RESPONSE
+// ============================================================
 
 function json(
   data,
-  status = 200,
-  extraHeaders = {}
+  status = 200
 ) {
   return new Response(
     JSON.stringify(
@@ -1943,7 +2072,6 @@ function json(
       status,
       headers: {
         ...CORS,
-        ...extraHeaders,
         "Content-Type":
           "application/json; charset=UTF-8"
       }
