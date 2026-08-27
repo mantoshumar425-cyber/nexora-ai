@@ -1,9 +1,7 @@
 const DEFAULT_MODEL = "gemini-3.6-flash";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
 
-const ALLOWED_MODELS = new Set([
-  DEFAULT_MODEL
-]);
+const ALLOWED_MODELS = new Set([DEFAULT_MODEL]);
 
 const MAX_HISTORY = 20;
 const MAX_TEXT_FILE_CHARS = 120000;
@@ -86,10 +84,7 @@ export default {
         }
       }
 
-      if (
-        url.pathname === "/" &&
-        request.method === "GET"
-      ) {
+      if (url.pathname === "/" && request.method === "GET") {
         return json({
           success: true,
           service: "Nexora AI",
@@ -107,7 +102,6 @@ export default {
         },
         404
       );
-
     } catch (error) {
       return json(
         {
@@ -121,6 +115,11 @@ export default {
     }
   }
 };
+
+
+// ======================================================
+// CHAT
+// ======================================================
 
 async function chat(request, env) {
   if (!env.GEMINI_API_KEY) {
@@ -171,19 +170,23 @@ async function chat(request, env) {
 
   const contents = [];
 
+  // --------------------------------------------------
+  // HISTORY
+  // --------------------------------------------------
+
   if (Array.isArray(body?.history)) {
-    const history =
-      body.history.slice(-MAX_HISTORY);
+    const history = body.history.slice(-MAX_HISTORY);
 
     for (const item of history) {
       const role =
-        item?.role === "assistant"
+        item?.role === "assistant" ||
+        item?.role === "model"
           ? "model"
           : "user";
 
-      const text = String(
-        item?.content || ""
-      ).trim();
+      const text = cleanText(
+        String(item?.content || "")
+      );
 
       if (!text) continue;
 
@@ -194,19 +197,31 @@ async function chat(request, env) {
     }
   }
 
+  // --------------------------------------------------
+  // USER MESSAGE
+  // --------------------------------------------------
+
   const parts = [
-    { text: message }
+    {
+      text: message
+    }
   ];
+
+  // --------------------------------------------------
+  // IMAGE
+  // --------------------------------------------------
 
   if (
     body?.image?.data &&
     body?.image?.mimeType
   ) {
-    const mimeType =
-      String(body.image.mimeType);
+    const mimeType = String(
+      body.image.mimeType
+    );
 
-    const data =
-      String(body.image.data);
+    const data = String(
+      body.image.data
+    );
 
     if (
       mimeType.startsWith("image/") &&
@@ -221,28 +236,31 @@ async function chat(request, env) {
     }
   }
 
+  // --------------------------------------------------
+  // FILE
+  // --------------------------------------------------
+
   const file = body?.file;
 
   if (
     file?.data &&
     file?.mimeType
   ) {
-    const mimeType =
-      String(file.mimeType);
+    const mimeType = String(
+      file.mimeType
+    );
 
-    const fileData =
-      String(file.data);
+    const fileData = String(
+      file.data
+    );
 
-    const fileName =
-      String(
-        file.name ||
-        "uploaded-file"
-      );
+    const fileName = String(
+      file.name || "uploaded-file"
+    );
 
-    const estimatedBytes =
-      Math.floor(
-        fileData.length * 0.75
-      );
+    const estimatedBytes = Math.floor(
+      fileData.length * 0.75
+    );
 
     if (
       estimatedBytes >
@@ -258,15 +276,12 @@ async function chat(request, env) {
       );
     }
 
-    if (
-      mimeType ===
-      "application/pdf"
-    ) {
+    if (mimeType === "application/pdf") {
       parts.push({
         text:
           "The user uploaded a PDF named " +
           fileName +
-          ". Analyze the document carefully and answer using its contents."
+          ". Analyze its contents carefully and answer using the document."
       });
 
       parts.push({
@@ -275,18 +290,18 @@ async function chat(request, env) {
           data: fileData
         }
       });
+    }
 
-    } else if (
-      mimeType.startsWith("image/")
-    ) {
+    else if (mimeType.startsWith("image/")) {
       parts.push({
         inlineData: {
           mimeType,
           data: fileData
         }
       });
+    }
 
-    } else if (
+    else if (
       isTextFile(
         mimeType,
         fileName
@@ -296,9 +311,7 @@ async function chat(request, env) {
 
       try {
         decodedText =
-          decodeBase64Utf8(
-            fileData
-          );
+          decodeBase64Utf8(fileData);
       } catch {
         decodedText = "";
       }
@@ -318,8 +331,9 @@ async function chat(request, env) {
             decodedText
         });
       }
+    }
 
-    } else if (
+    else if (
       mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
@@ -328,17 +342,18 @@ async function chat(request, env) {
           "The user uploaded a DOCX document named " +
           fileName +
           ". Direct DOCX extraction is not enabled. " +
-          "If possible, upload the document as PDF or TXT."
+          "Ask the user to upload it as PDF or TXT."
       });
+    }
 
-    } else {
+    else {
       parts.push({
         text:
-          "The user uploaded a file named " +
+          "The uploaded file named " +
           fileName +
-          " with MIME type " +
+          " has MIME type " +
           mimeType +
-          ". This file format is not directly supported."
+          " and is not directly supported."
       });
     }
   }
@@ -348,13 +363,32 @@ async function chat(request, env) {
     parts
   });
 
+  // --------------------------------------------------
+  // SYSTEM INSTRUCTION
+  // --------------------------------------------------
+
   const systemInstruction = {
     parts: [
       {
         text: `
 You are Nexora AI, a premium AI assistant.
 
-Answer the user's exact request naturally and directly.
+Answer naturally, clearly and directly.
+
+IMPORTANT OUTPUT RULES:
+- Never output random symbols or corrupted characters.
+- Never prepend answers with "$", "*", "+", "#", "data:", "json:" or other meaningless characters.
+- Do not use decorative symbol spam.
+- Do not wrap the entire answer in quotation marks.
+- Do not output raw SSE data, JSON objects, API responses or internal protocol text.
+- Use plain readable text.
+- You may use simple numbered lists and bullet points.
+- Do not use Markdown heading syntax beginning with #.
+- Avoid unnecessary bold or italic formatting.
+- Do not use excessive asterisks.
+- For code, use normal fenced code blocks with triple backticks.
+- Never put random characters before the first meaningful word of an answer.
+- Keep formatting clean and suitable for a premium AI chat interface.
 
 Be accurate, useful and honest.
 Do not invent facts.
@@ -372,17 +406,8 @@ For uploaded images and documents, analyze the supplied content carefully.
 
 Do not claim to have performed an action that you did not perform.
 
-Avoid repetitive openings such as "Sure", "Certainly", or "Of course".
-
-Use clean readable formatting.
-
-Do not use headings beginning with #.
-
-Do not use unnecessary bold or italic formatting.
-
-For lists, use numbered or simple bullet points.
-
-For code, use proper code blocks.
+Avoid repetitive openings such as:
+"Sure", "Certainly", "Of course".
 
 Give original responses suited to the current request.
         `.trim()
@@ -390,38 +415,38 @@ Give original responses suited to the current request.
     ]
   };
 
+  // --------------------------------------------------
+  // GEMINI STREAM
+  // --------------------------------------------------
+
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
     "v1beta/models/" +
     encodeURIComponent(model) +
     ":streamGenerateContent?alt=sse&key=" +
-    encodeURIComponent(
-      env.GEMINI_API_KEY
-    );
+    encodeURIComponent(env.GEMINI_API_KEY);
 
   let geminiResponse;
 
   try {
-    geminiResponse =
-      await fetch(
-        endpoint,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-          body: JSON.stringify({
-            systemInstruction,
-            contents,
-            generationConfig: {
-              temperature: 0.85,
-              topP: 0.95,
-              maxOutputTokens: 8192
-            }
-          })
-        }
-      );
+    geminiResponse = await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          systemInstruction,
+          contents,
+          generationConfig: {
+            temperature: 0.75,
+            topP: 0.95,
+            maxOutputTokens: 8192
+          }
+        })
+      }
+    );
   } catch (error) {
     return json(
       {
@@ -471,11 +496,8 @@ Give original responses suited to the current request.
     );
   }
 
-  const encoder =
-    new TextEncoder();
-
-  const decoder =
-    new TextDecoder();
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
 
   const reader =
     geminiResponse.body.getReader();
@@ -483,6 +505,8 @@ Give original responses suited to the current request.
   const stream =
     new ReadableStream({
       async start(controller) {
+        let buffer = "";
+
         try {
           while (true) {
             const {
@@ -492,35 +516,123 @@ Give original responses suited to the current request.
 
             if (done) break;
 
-            if (value) {
-              const chunk =
-                decoder.decode(
-                  value,
-                  { stream: true }
-                );
+            if (!value) continue;
 
-              controller.enqueue(
-                encoder.encode(chunk)
-              );
+            buffer += decoder.decode(
+              value,
+              { stream: true }
+            );
+
+            /*
+             * IMPORTANT:
+             * We intentionally parse Gemini SSE here
+             * and send ONLY clean text chunks to frontend.
+             *
+             * This prevents raw Gemini protocol data,
+             * JSON fragments and unwanted symbols from
+             * appearing in the Nexora UI.
+             */
+
+            const lines =
+              buffer.split(/\r?\n/);
+
+            buffer =
+              lines.pop() || "";
+
+            for (const line of lines) {
+              const trimmed =
+                line.trim();
+
+              if (!trimmed) continue;
+
+              if (
+                !trimmed.startsWith("data:")
+              ) {
+                continue;
+              }
+
+              const raw =
+                trimmed.slice(5).trim();
+
+              if (!raw) continue;
+
+              if (raw === "[DONE]") {
+                continue;
+              }
+
+              try {
+                const chunk =
+                  JSON.parse(raw);
+
+                const candidate =
+                  chunk?.candidates?.[0];
+
+                const parts =
+                  candidate?.content?.parts;
+
+                if (!Array.isArray(parts)) {
+                  continue;
+                }
+
+                for (const part of parts) {
+                  if (
+                    typeof part?.text !==
+                    "string"
+                  ) {
+                    continue;
+                  }
+
+                  const clean =
+                    cleanStreamChunk(
+                      part.text
+                    );
+
+                  if (!clean) continue;
+
+                  controller.enqueue(
+                    encoder.encode(
+                      `data: ${JSON.stringify({
+                        text: clean
+                      })}\n\n`
+                    )
+                  );
+                }
+              } catch {
+                // Ignore malformed SSE lines.
+              }
             }
           }
-        } catch (error) {
-          const payload =
-            JSON.stringify({
-              error:
-                error?.message ||
-                "Streaming error."
-            });
 
+          // Flush decoder
+          const finalChunk =
+            decoder.decode();
+
+          if (finalChunk) {
+            buffer += finalChunk;
+          }
+
+        } catch (error) {
           controller.enqueue(
             encoder.encode(
-              `data: ${payload}\n\n`
+              `data: ${JSON.stringify({
+                error:
+                  error?.message ||
+                  "Streaming error."
+              })}\n\n`
             )
           );
         } finally {
           try {
             reader.releaseLock();
           } catch {}
+
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                done: true
+              })}\n\n`
+            )
+          );
 
           controller.close();
         }
@@ -541,6 +653,11 @@ Give original responses suited to the current request.
     }
   );
 }
+
+
+// ======================================================
+// IMAGE GENERATION
+// ======================================================
 
 async function generateImage(request, env) {
   if (!env.GEMINI_API_KEY) {
@@ -603,42 +720,41 @@ async function generateImage(request, env) {
   let response;
 
   try {
-    response =
-      await fetch(
-        endpoint,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-            "x-goog-api-key":
-              env.GEMINI_API_KEY
-          },
-          body: JSON.stringify({
-            model: IMAGE_MODEL,
-            input: [
-              {
-                type: "text",
-                text: prompt
-              }
-            ],
-            response_format: {
-              type: "image",
-              mime_type: "image/png",
-              aspect_ratio:
-                String(
-                  body?.aspectRatio ||
-                  "1:1"
-                ),
-              image_size:
-                String(
-                  body?.imageSize ||
-                  "1K"
-                )
+    response = await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+          "x-goog-api-key":
+            env.GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          model: IMAGE_MODEL,
+          input: [
+            {
+              type: "text",
+              text: prompt
             }
-          })
-        }
-      );
+          ],
+          response_format: {
+            type: "image",
+            mime_type: "image/png",
+            aspect_ratio:
+              String(
+                body?.aspectRatio ||
+                "1:1"
+              ),
+            image_size:
+              String(
+                body?.imageSize ||
+                "1K"
+              )
+          }
+        })
+      }
+    );
   } catch (error) {
     return json(
       {
@@ -720,7 +836,8 @@ async function generateImage(request, env) {
           item?.type === "image" &&
           item?.data
         ) {
-          imageData = item.data;
+          imageData =
+            item.data;
 
           mimeType =
             item.mime_type ||
@@ -760,6 +877,66 @@ async function generateImage(request, env) {
     image: imageUrl
   });
 }
+
+
+// ======================================================
+// CLEAN TEXT
+// ======================================================
+
+function cleanText(text) {
+  if (!text) return "";
+
+  let value = String(text);
+
+  // Remove accidental SSE prefixes
+  value = value.replace(
+    /^\s*data:\s*/gim,
+    ""
+  );
+
+  // Remove common protocol noise
+  value = value.replace(
+    /^\s*\[DONE\]\s*$/gim,
+    ""
+  );
+
+  return value.trim();
+}
+
+
+// ======================================================
+// CLEAN STREAM CHUNK
+// ======================================================
+
+function cleanStreamChunk(text) {
+  if (!text) return "";
+
+  let value = String(text);
+
+  /*
+   * Do NOT remove legitimate Markdown characters.
+   * Asterisks can be part of code or formatting.
+   *
+   * We only remove obvious protocol corruption.
+   */
+
+  value = value.replace(
+    /^\s*data:\s*/i,
+    ""
+  );
+
+  value = value.replace(
+    /^\s*\[DONE\]\s*$/i,
+    ""
+  );
+
+  return value;
+}
+
+
+// ======================================================
+// TEXT FILE
+// ======================================================
 
 function isTextFile(mimeType, fileName) {
   const type =
@@ -802,6 +979,11 @@ function isTextFile(mimeType, fileName) {
   );
 }
 
+
+// ======================================================
+// BASE64 UTF-8
+// ======================================================
+
 function decodeBase64Utf8(base64) {
   const binary = atob(base64);
 
@@ -823,6 +1005,11 @@ function decodeBase64Utf8(base64) {
     "utf-8"
   ).decode(bytes);
 }
+
+
+// ======================================================
+// JSON
+// ======================================================
 
 function json(data, status = 200) {
   return new Response(
