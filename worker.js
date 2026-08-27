@@ -1,24 +1,19 @@
-// ============================================================
-// NEXORA AI — COMPLETE CLOUDFLARE WORKER
-// Authentication + D1 + Sessions + Profile + Password Change
-// Delete Account + Gemini Chat + Gemini Image Generation
-// ============================================================
-
 const DEFAULT_MODEL = "gemini-3.6-flash";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+
+const ALLOWED_MODELS = new Set([
+  "gemini-3.6-flash"
+]);
 
 const MAX_HISTORY = 20;
 const MAX_TEXT_FILE_CHARS = 120000;
 const MAX_INLINE_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGE_PROMPT_CHARS = 10000;
 
-const SESSION_DAYS = 30;
-const PBKDF2_ITERATIONS = 120000;
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
   "Cache-Control": "no-store"
 };
 
@@ -34,27 +29,29 @@ export default {
     }
 
     try {
-      // --------------------------------------------------------
+      // =========================
       // HEALTH
-      // --------------------------------------------------------
-
-      if (url.pathname === "/api/health" && request.method === "GET") {
+      // =========================
+      if (
+        url.pathname === "/api/health" &&
+        request.method === "GET"
+      ) {
         return json({
           success: true,
           service: "Nexora AI",
           worker: "online",
           model: DEFAULT_MODEL,
           imageModel: IMAGE_MODEL,
-          database: Boolean(env.DB),
+          database: false,
           geminiKey: Boolean(env.GEMINI_API_KEY),
-          authentication: true,
-          signup: true,
-          login: true,
-          logout: true,
-          sessions: true,
-          profile: true,
-          passwordChange: true,
-          deleteAccount: true,
+          authentication: false,
+          signup: false,
+          login: false,
+          logout: false,
+          sessions: false,
+          profile: false,
+          passwordChange: false,
+          deleteAccount: false,
           streaming: true,
           vision: true,
           files: true,
@@ -64,118 +61,19 @@ export default {
         });
       }
 
-      // --------------------------------------------------------
-      // ROOT
-      // --------------------------------------------------------
-
-      if (url.pathname === "/" && request.method === "GET") {
-        return json({
-          success: true,
-          service: "Nexora AI",
-          status: "online",
-          model: DEFAULT_MODEL,
-          imageModel: IMAGE_MODEL,
-          authentication: true
-        });
-      }
-
-      // --------------------------------------------------------
-      // AUTH
-      // --------------------------------------------------------
-
-      if (url.pathname === "/api/auth/signup" && request.method === "POST") {
-        return await signup(request, env);
-      }
-
-      if (url.pathname === "/api/auth/login" && request.method === "POST") {
-        return await login(request, env);
-      }
-
-      if (url.pathname === "/api/auth/logout" && request.method === "POST") {
-        return await logout(request, env);
-      }
-
-      if (url.pathname === "/api/auth/me" && request.method === "GET") {
-        return await getMe(request, env);
-      }
-
-      // Compatibility endpoints
-      if (url.pathname === "/api/signup" && request.method === "POST") {
-        return await signup(request, env);
-      }
-
-      if (url.pathname === "/api/login" && request.method === "POST") {
-        return await login(request, env);
-      }
-
-      if (url.pathname === "/api/logout" && request.method === "POST") {
-        return await logout(request, env);
-      }
-
-      if (url.pathname === "/api/me" && request.method === "GET") {
-        return await getMe(request, env);
-      }
-
-      // --------------------------------------------------------
-      // PROFILE
-      // --------------------------------------------------------
-
-      if (url.pathname === "/api/profile" && request.method === "GET") {
-        return await getProfile(request, env);
-      }
-
-      if (url.pathname === "/api/profile" && request.method === "PUT") {
-        return await updateProfile(request, env);
-      }
-
-      // --------------------------------------------------------
-      // PASSWORD
-      // --------------------------------------------------------
-
-      if (
-        url.pathname === "/api/profile/password" &&
-        request.method === "POST"
-      ) {
-        return await changePassword(request, env);
-      }
-
-      if (
-        url.pathname === "/api/change-password" &&
-        request.method === "POST"
-      ) {
-        return await changePassword(request, env);
-      }
-
-      // --------------------------------------------------------
-      // DELETE ACCOUNT
-      // --------------------------------------------------------
-
-      if (
-        url.pathname === "/api/profile/delete" &&
-        request.method === "DELETE"
-      ) {
-        return await deleteAccount(request, env);
-      }
-
-      if (
-        url.pathname === "/api/delete-account" &&
-        request.method === "DELETE"
-      ) {
-        return await deleteAccount(request, env);
-      }
-
-      // --------------------------------------------------------
+      // =========================
       // CHAT
-      // --------------------------------------------------------
-
-      if (url.pathname === "/api/chat" && request.method === "POST") {
+      // =========================
+      if (
+        url.pathname === "/api/chat" &&
+        request.method === "POST"
+      ) {
         return await chat(request, env);
       }
 
-      // --------------------------------------------------------
-      // IMAGE
-      // --------------------------------------------------------
-
+      // =========================
+      // IMAGE GENERATION
+      // =========================
       if (
         url.pathname === "/api/generate-image" &&
         request.method === "POST"
@@ -183,10 +81,9 @@ export default {
         return await generateImage(request, env);
       }
 
-      // --------------------------------------------------------
+      // =========================
       // CLOUDFLARE ASSETS
-      // --------------------------------------------------------
-
+      // =========================
       if (env.ASSETS) {
         const asset = await env.ASSETS.fetch(request);
 
@@ -215,6 +112,26 @@ export default {
         }
       }
 
+      // =========================
+      // ROOT
+      // =========================
+      if (
+        url.pathname === "/" &&
+        request.method === "GET"
+      ) {
+        return json({
+          success: true,
+          service: "Nexora AI",
+          status: "online",
+          model: DEFAULT_MODEL,
+          imageModel: IMAGE_MODEL,
+          authentication: false
+        });
+      }
+
+      // =========================
+      // 404
+      // =========================
       return json(
         {
           success: false,
@@ -223,11 +140,14 @@ export default {
         },
         404
       );
+
     } catch (error) {
       return json(
         {
           success: false,
-          error: error?.message || "Internal server error."
+          error:
+            error?.message ||
+            "Internal server error."
         },
         500
       );
@@ -235,991 +155,27 @@ export default {
   }
 };
 
-// ============================================================
-// SIGNUP
-// ============================================================
 
-async function signup(request, env) {
-  if (!env.DB) {
-    return json(
-      {
-        success: false,
-        error: "D1 database binding DB is not configured."
-      },
-      500
-    );
-  }
-
-  let body;
-
-  try {
-    body = await request.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        error: "Invalid JSON request."
-      },
-      400
-    );
-  }
-
-  const name = String(body?.name || "").trim();
-  const email = normalizeEmail(body?.email);
-  const password = String(body?.password || "");
-
-  if (!name) {
-    return json(
-      {
-        success: false,
-        error: "Name is required."
-      },
-      400
-    );
-  }
-
-  if (!isValidEmail(email)) {
-    return json(
-      {
-        success: false,
-        error: "Please enter a valid email address."
-      },
-      400
-    );
-  }
-
-  if (password.length < 6) {
-    return json(
-      {
-        success: false,
-        error: "Password must be at least 6 characters."
-      },
-      400
-    );
-  }
-
-  const existing = await env.DB
-    .prepare(
-      "SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1"
-    )
-    .bind(email)
-    .first();
-
-  if (existing) {
-    return json(
-      {
-        success: false,
-        error: "An account with this email already exists."
-      },
-      409
-    );
-  }
-
-  const passwordHash = await hashPassword(password);
-  const now = Date.now();
-
-  let result;
-
-  try {
-    result = await env.DB
-      .prepare(
-        `INSERT INTO users
-         (name, email, password_hash, created_at)
-         VALUES (?, ?, ?, ?)`
-      )
-      .bind(
-        name,
-        email,
-        passwordHash,
-        now
-      )
-      .run();
-  } catch (error) {
-    if (
-      String(error?.message || "")
-        .toLowerCase()
-        .includes("unique")
-    ) {
-      return json(
-        {
-          success: false,
-          error: "An account with this email already exists."
-        },
-        409
-      );
-    }
-
-    throw error;
-  }
-
-  const userId =
-    result?.meta?.last_row_id;
-
-  if (!userId) {
-    return json(
-      {
-        success: false,
-        error: "Account was created but user ID was not returned."
-      },
-      500
-    );
-  }
-
-  const token = await createSession(
-    env,
-    userId
-  );
-
-  return json({
-    success: true,
-    message: "Account created successfully.",
-    token,
-    user: {
-      id: userId,
-      name,
-      email
-    }
-  });
-}
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-async function login(request, env) {
-  if (!env.DB) {
-    return json(
-      {
-        success: false,
-        error: "D1 database binding DB is not configured."
-      },
-      500
-    );
-  }
-
-  let body;
-
-  try {
-    body = await request.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        error: "Invalid JSON request."
-      },
-      400
-    );
-  }
-
-  const email = normalizeEmail(body?.email);
-  const password = String(body?.password || "");
-
-  if (!isValidEmail(email) || !password) {
-    return json(
-      {
-        success: false,
-        error: "Invalid email or password"
-      },
-      401
-    );
-  }
-
-  const user = await env.DB
-    .prepare(
-      `SELECT id, name, email, password_hash, created_at
-       FROM users
-       WHERE LOWER(email) = LOWER(?)
-       LIMIT 1`
-    )
-    .bind(email)
-    .first();
-
-  if (!user) {
-    return json(
-      {
-        success: false,
-        error: "Invalid email or password"
-      },
-      401
-    );
-  }
-
-  const valid = await verifyPassword(
-    password,
-    String(user.password_hash || "")
-  );
-
-  if (!valid) {
-    return json(
-      {
-        success: false,
-        error: "Invalid email or password"
-      },
-      401
-    );
-  }
-
-  const token = await createSession(
-    env,
-    user.id
-  );
-
-  return json({
-    success: true,
-    message: "Login successful.",
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      created_at: user.created_at
-    }
-  });
-}
-
-// ============================================================
-// LOGOUT
-// ============================================================
-
-async function logout(request, env) {
-  const token = getToken(request);
-
-  if (token && env.DB) {
-    await env.DB
-      .prepare(
-        "DELETE FROM sessions WHERE id = ?"
-      )
-      .bind(token)
-      .run();
-  }
-
-  return json({
-    success: true,
-    message: "Logged out successfully."
-  });
-}
-
-// ============================================================
-// ME
-// ============================================================
-
-async function getMe(request, env) {
-  const auth = await authenticate(
-    request,
-    env
-  );
-
-  if (!auth.ok) {
-    return json(
-      {
-        success: false,
-        error: "Not authenticated."
-      },
-      401
-    );
-  }
-
-  return json({
-    success: true,
-    authenticated: true,
-    user: auth.user
-  });
-}
-
-// ============================================================
-// PROFILE GET
-// ============================================================
-
-async function getProfile(request, env) {
-  const auth = await authenticate(
-    request,
-    env
-  );
-
-  if (!auth.ok) {
-    return json(
-      {
-        success: false,
-        error: "Authentication required."
-      },
-      401
-    );
-  }
-
-  return json({
-    success: true,
-    user: auth.user
-  });
-}
-
-// ============================================================
-// PROFILE UPDATE
-// ============================================================
-
-async function updateProfile(request, env) {
-  const auth = await authenticate(
-    request,
-    env
-  );
-
-  if (!auth.ok) {
-    return json(
-      {
-        success: false,
-        error: "Authentication required."
-      },
-      401
-    );
-  }
-
-  let body;
-
-  try {
-    body = await request.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        error: "Invalid JSON request."
-      },
-      400
-    );
-  }
-
-  const name =
-    String(body?.name ?? "")
-      .trim();
-
-  const email =
-    normalizeEmail(
-      body?.email ?? auth.user.email
-    );
-
-  if (!name) {
-    return json(
-      {
-        success: false,
-        error: "Name is required."
-      },
-      400
-    );
-  }
-
-  if (!isValidEmail(email)) {
-    return json(
-      {
-        success: false,
-        error: "Invalid email address."
-      },
-      400
-    );
-  }
-
-  const duplicate = await env.DB
-    .prepare(
-      `SELECT id
-       FROM users
-       WHERE LOWER(email) = LOWER(?)
-       AND id != ?
-       LIMIT 1`
-    )
-    .bind(
-      email,
-      auth.user.id
-    )
-    .first();
-
-  if (duplicate) {
-    return json(
-      {
-        success: false,
-        error: "That email is already in use."
-      },
-      409
-    );
-  }
-
-  await env.DB
-    .prepare(
-      `UPDATE users
-       SET name = ?, email = ?
-       WHERE id = ?`
-    )
-    .bind(
-      name,
-      email,
-      auth.user.id
-    )
-    .run();
-
-  return json({
-    success: true,
-    message: "Profile updated.",
-    user: {
-      ...auth.user,
-      name,
-      email
-    }
-  });
-}
-
-// ============================================================
-// PASSWORD CHANGE
-// ============================================================
-
-async function changePassword(request, env) {
-  const auth = await authenticate(
-    request,
-    env
-  );
-
-  if (!auth.ok) {
-    return json(
-      {
-        success: false,
-        error: "Authentication required."
-      },
-      401
-    );
-  }
-
-  let body;
-
-  try {
-    body = await request.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        error: "Invalid JSON request."
-      },
-      400
-    );
-  }
-
-  const currentPassword =
-    String(
-      body?.currentPassword ||
-      body?.oldPassword ||
-      ""
-    );
-
-  const newPassword =
-    String(
-      body?.newPassword ||
-      body?.password ||
-      ""
-    );
-
-  if (!currentPassword || !newPassword) {
-    return json(
-      {
-        success: false,
-        error: "Current and new password are required."
-      },
-      400
-    );
-  }
-
-  if (newPassword.length < 6) {
-    return json(
-      {
-        success: false,
-        error: "New password must be at least 6 characters."
-      },
-      400
-    );
-  }
-
-  const valid =
-    await verifyPassword(
-      currentPassword,
-      String(auth.user.password_hash || "")
-    );
-
-  if (!valid) {
-    return json(
-      {
-        success: false,
-        error: "Current password is incorrect."
-      },
-      401
-    );
-  }
-
-  const newHash =
-    await hashPassword(
-      newPassword
-    );
-
-  await env.DB
-    .prepare(
-      `UPDATE users
-       SET password_hash = ?
-       WHERE id = ?`
-    )
-    .bind(
-      newHash,
-      auth.user.id
-    )
-    .run();
-
-  // Revoke all old sessions
-  await env.DB
-    .prepare(
-      "DELETE FROM sessions WHERE user_id = ?"
-    )
-    .bind(auth.user.id)
-    .run();
-
-  const token =
-    await createSession(
-      env,
-      auth.user.id
-    );
-
-  return json({
-    success: true,
-    message: "Password changed successfully.",
-    token
-  });
-}
-
-// ============================================================
-// DELETE ACCOUNT
-// ============================================================
-
-async function deleteAccount(request, env) {
-  const auth = await authenticate(
-    request,
-    env
-  );
-
-  if (!auth.ok) {
-    return json(
-      {
-        success: false,
-        error: "Authentication required."
-      },
-      401
-    );
-  }
-
-  let body = {};
-
-  try {
-    body = await request.json();
-  } catch {}
-
-  const password =
-    String(
-      body?.password || ""
-    );
-
-  if (password) {
-    const valid =
-      await verifyPassword(
-        password,
-        String(auth.user.password_hash || "")
-      );
-
-    if (!valid) {
-      return json(
-        {
-          success: false,
-          error: "Incorrect password."
-        },
-        401
-      );
-    }
-  }
-
-  await env.DB
-    .prepare(
-      "DELETE FROM sessions WHERE user_id = ?"
-    )
-    .bind(auth.user.id)
-    .run();
-
-  await env.DB
-    .prepare(
-      "DELETE FROM users WHERE id = ?"
-    )
-    .bind(auth.user.id)
-    .run();
-
-  return json({
-    success: true,
-    message: "Account deleted successfully."
-  });
-}
-
-// ============================================================
-// AUTHENTICATION
-// ============================================================
-
-async function authenticate(request, env) {
-  if (!env.DB) {
-    return {
-      ok: false,
-      error: "Database not configured."
-    };
-  }
-
-  const token =
-    getToken(request);
-
-  if (!token) {
-    return {
-      ok: false,
-      error: "No session."
-    };
-  }
-
-  const now =
-    Date.now();
-
-  const session =
-    await env.DB
-      .prepare(
-        `SELECT
-          s.id AS session_id,
-          s.user_id,
-          s.expires_at,
-          u.id,
-          u.name,
-          u.email,
-          u.password_hash,
-          u.created_at
-         FROM sessions s
-         INNER JOIN users u
-           ON u.id = s.user_id
-         WHERE s.id = ?
-         LIMIT 1`
-      )
-      .bind(token)
-      .first();
-
-  if (!session) {
-    return {
-      ok: false,
-      error: "Invalid session."
-    };
-  }
-
-  if (
-    Number(session.expires_at) <= now
-  ) {
-    await env.DB
-      .prepare(
-        "DELETE FROM sessions WHERE id = ?"
-      )
-      .bind(token)
-      .run();
-
-    return {
-      ok: false,
-      error: "Session expired."
-    };
-  }
-
-  return {
-    ok: true,
-    token,
-    user: {
-      id: session.id,
-      name: session.name,
-      email: session.email,
-      password_hash: session.password_hash,
-      created_at: session.created_at
-    }
-  };
-}
-
-// ============================================================
-// SESSION
-// ============================================================
-
-async function createSession(env, userId) {
-  const token =
-    randomToken();
-
-  const now =
-    Date.now();
-
-  const expiresAt =
-    now +
-    SESSION_DAYS *
-    24 *
-    60 *
-    60 *
-    1000;
-
-  await env.DB
-    .prepare(
-      `INSERT INTO sessions
-       (id, user_id, expires_at, created_at)
-       VALUES (?, ?, ?, ?)`
-    )
-    .bind(
-      token,
-      userId,
-      expiresAt,
-      now
-    )
-    .run();
-
-  return token;
-}
-
-function getToken(request) {
-  const authorization =
-    request.headers.get("Authorization") ||
-    "";
-
-  if (
-    authorization
-      .toLowerCase()
-      .startsWith("bearer ")
-  ) {
-    return authorization
-      .slice(7)
-      .trim();
-  }
-
-  const cookie =
-    request.headers.get("Cookie") ||
-    "";
-
-  const match =
-    cookie.match(
-      /(?:^|;\s*)nexora_session=([^;]+)/
-    );
-
-  if (match) {
-    return decodeURIComponent(
-      match[1]
-    );
-  }
-
-  return null;
-}
-
-function randomToken() {
-  const bytes =
-    new Uint8Array(32);
-
-  crypto.getRandomValues(bytes);
-
-  return bytesToBase64Url(bytes);
-}
-
-// ============================================================
-// PASSWORD HASHING
-// ============================================================
-
-async function hashPassword(password) {
-  const salt =
-    new Uint8Array(16);
-
-  crypto.getRandomValues(salt);
-
-  const key =
-    await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(password),
-      {
-        name: "PBKDF2"
-      },
-      false,
-      [
-        "deriveBits"
-      ]
-    );
-
-  const bits =
-    await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: PBKDF2_ITERATIONS,
-        hash: "SHA-256"
-      },
-      key,
-      256
-    );
-
-  const hash =
-    new Uint8Array(bits);
-
-  return [
-    "pbkdf2",
-    PBKDF2_ITERATIONS,
-    bytesToBase64Url(salt),
-    bytesToBase64Url(hash)
-  ].join("$");
-}
-
-async function verifyPassword(
-  password,
-  stored
-) {
-  if (!password || !stored) {
-    return false;
-  }
-
-  // New Nexora PBKDF2 format
-  if (
-    stored.startsWith("pbkdf2$")
-  ) {
-    try {
-      const parts =
-        stored.split("$");
-
-      if (parts.length !== 4) {
-        return false;
-      }
-
-      const iterations =
-        Number(parts[1]);
-
-      const salt =
-        base64UrlToBytes(parts[2]);
-
-      const expected =
-        base64UrlToBytes(parts[3]);
-
-      if (
-        !iterations ||
-        !salt.length ||
-        !expected.length
-      ) {
-        return false;
-      }
-
-      const key =
-        await crypto.subtle.importKey(
-          "raw",
-          new TextEncoder().encode(password),
-          {
-            name: "PBKDF2"
-          },
-          false,
-          [
-            "deriveBits"
-          ]
-        );
-
-      const bits =
-        await crypto.subtle.deriveBits(
-          {
-            name: "PBKDF2",
-            salt,
-            iterations,
-            hash: "SHA-256"
-          },
-          key,
-          expected.length * 8
-        );
-
-      const actual =
-        new Uint8Array(bits);
-
-      return constantTimeEqual(
-        actual,
-        expected
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  // Legacy SHA-256 formats
-  // Allows migration of older Nexora accounts.
-  try {
-    const encoder =
-      new TextEncoder();
-
-    const digest =
-      new Uint8Array(
-        await crypto.subtle.digest(
-          "SHA-256",
-          encoder.encode(password)
-        )
-      );
-
-    const hex =
-      bytesToHex(digest);
-
-    const base64 =
-      bytesToBase64(digest);
-
-    const base64url =
-      bytesToBase64Url(digest);
-
-    const candidates = [
-      hex,
-      hex.toLowerCase(),
-      base64,
-      base64url
-    ];
-
-    if (
-      candidates.includes(
-        stored
-      )
-    ) {
-      return true;
-    }
-  } catch {}
-
-  // Legacy SHA-256 with common prefixes
-  try {
-    const legacyCandidates = [
-      "sha256:" + bytesToHex(
-        new Uint8Array(
-          await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(password)
-          )
-        )
-      ),
-      "sha256$" + bytesToHex(
-        new Uint8Array(
-          await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(password)
-          )
-        )
-      )
-    ];
-
-    if (
-      legacyCandidates.includes(
-        stored
-      )
-    ) {
-      return true;
-    }
-  } catch {}
-
-  return false;
-}
-
-// ============================================================
-// GEMINI CHAT
-// ============================================================
+// ======================================================
+// CHAT
+// ======================================================
 
 async function chat(request, env) {
+
   if (!env.GEMINI_API_KEY) {
     return json(
       {
         success: false,
-        error: "GEMINI_API_KEY is not configured."
+        error:
+          "GEMINI_API_KEY is not configured."
       },
       500
     );
   }
+
+  // --------------------------------------------------
+  // PARSE BODY
+  // --------------------------------------------------
 
   let body;
 
@@ -1236,9 +192,7 @@ async function chat(request, env) {
   }
 
   const message =
-    String(
-      body?.message || ""
-    ).trim();
+    String(body?.message || "").trim();
 
   if (!message) {
     return json(
@@ -1250,21 +204,40 @@ async function chat(request, env) {
     );
   }
 
+  // --------------------------------------------------
+  // MODEL
+  // --------------------------------------------------
+
+  const requestedModel =
+    String(
+      body?.model ||
+      DEFAULT_MODEL
+    );
+
   const model =
-    DEFAULT_MODEL;
+    ALLOWED_MODELS.has(requestedModel)
+      ? requestedModel
+      : DEFAULT_MODEL;
+
+  // --------------------------------------------------
+  // CONTENTS
+  // --------------------------------------------------
 
   const contents = [];
 
+  // --------------------------------------------------
+  // HISTORY
+  // --------------------------------------------------
+
   if (Array.isArray(body?.history)) {
+
     const history =
-      body.history.slice(
-        -MAX_HISTORY
-      );
+      body.history.slice(-MAX_HISTORY);
 
     for (const item of history) {
+
       const role =
-        item?.role === "assistant" ||
-        item?.role === "model"
+        item?.role === "assistant"
           ? "model"
           : "user";
 
@@ -1286,30 +259,34 @@ async function chat(request, env) {
     }
   }
 
+  // --------------------------------------------------
+  // CURRENT USER PARTS
+  // --------------------------------------------------
+
   const parts = [
     {
       text: message
     }
   ];
 
-  // Image
+  // --------------------------------------------------
+  // IMAGE / VISION
+  // --------------------------------------------------
+
   if (
     body?.image?.data &&
     body?.image?.mimeType
   ) {
+
     const mimeType =
-      String(
-        body.image.mimeType
-      );
+      String(body.image.mimeType);
 
     const data =
-      String(
-        body.image.data
-      );
+      String(body.image.data);
 
     if (
       mimeType.startsWith("image/") &&
-      data.length
+      data.length > 0
     ) {
       parts.push({
         inlineData: {
@@ -1320,23 +297,22 @@ async function chat(request, env) {
     }
   }
 
-  // File
-  const file =
-    body?.file;
+  // --------------------------------------------------
+  // FILE
+  // --------------------------------------------------
+
+  const file = body?.file;
 
   if (
     file?.data &&
     file?.mimeType
   ) {
+
     const mimeType =
-      String(
-        file.mimeType
-      );
+      String(file.mimeType);
 
     const fileData =
-      String(
-        file.data
-      );
+      String(file.data);
 
     const fileName =
       String(
@@ -1356,19 +332,23 @@ async function chat(request, env) {
       return json(
         {
           success: false,
-          error: "File is too large."
+          error:
+            "File is too large. Please upload a smaller file."
         },
         413
       );
     }
 
+    // PDF
     if (
-      mimeType ===
-      "application/pdf"
+      mimeType === "application/pdf"
     ) {
+
       parts.push({
         text:
-          `The user uploaded a PDF named "${fileName}". Analyze it carefully and answer using its contents.`
+          "The user uploaded a PDF named " +
+          fileName +
+          ". Analyze the document carefully and answer using its contents."
       });
 
       parts.push({
@@ -1377,63 +357,100 @@ async function chat(request, env) {
           data: fileData
         }
       });
-    } else if (
+    }
+
+    // IMAGE
+    else if (
       mimeType.startsWith("image/")
     ) {
+
       parts.push({
         inlineData: {
           mimeType,
           data: fileData
         }
       });
-    } else if (
+    }
+
+    // TEXT
+    else if (
       isTextFile(
         mimeType,
         fileName
       )
     ) {
+
+      let decodedText = "";
+
       try {
-        let decoded =
+        decodedText =
           decodeBase64Utf8(
             fileData
           );
+      } catch {
+        decodedText = "";
+      }
 
-        decoded =
-          decoded.slice(
+      if (decodedText) {
+
+        decodedText =
+          decodedText.slice(
             0,
             MAX_TEXT_FILE_CHARS
           );
 
         parts.push({
           text:
-            `Uploaded file: ${fileName}\n\nFile content:\n${decoded}`
-        });
-      } catch {
-        parts.push({
-          text:
-            `The uploaded file "${fileName}" could not be decoded.`
+            "Uploaded file: " +
+            fileName +
+            "\n\n" +
+            "File content:\n" +
+            decodedText
         });
       }
-    } else if (
+    }
+
+    // DOCX
+    else if (
       mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
+
       parts.push({
         text:
-          `The user uploaded a DOCX named "${fileName}". Direct DOCX extraction is not enabled.`
+          "The user uploaded a DOCX document named " +
+          fileName +
+          ". Direct DOCX extraction is not enabled in this Worker. " +
+          "If possible, upload the document as PDF or TXT."
       });
-    } else {
+    }
+
+    // OTHER
+    else {
+
       parts.push({
         text:
-          `The user uploaded "${fileName}" with MIME type ${mimeType}.`
+          "The user uploaded a file named " +
+          fileName +
+          " with MIME type " +
+          mimeType +
+          ". This file format is not directly supported."
       });
     }
   }
+
+  // --------------------------------------------------
+  // CURRENT MESSAGE
+  // --------------------------------------------------
 
   contents.push({
     role: "user",
     parts
   });
+
+  // --------------------------------------------------
+  // SYSTEM INSTRUCTION
+  // --------------------------------------------------
 
   const systemInstruction = {
     parts: [
@@ -1461,7 +478,8 @@ content carefully.
 
 Do not claim to have performed an action that you did not perform.
 
-Avoid repetitive openings such as "Sure", "Certainly", or "Of course".
+Avoid repetitive openings such as "Sure", "Certainly",
+or "Of course".
 
 Use clean readable formatting.
 
@@ -1479,6 +497,10 @@ Give original responses suited to the current request.
     ]
   };
 
+  // --------------------------------------------------
+  // GEMINI STREAM ENDPOINT
+  // --------------------------------------------------
+
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
     "v1beta/models/" +
@@ -1491,27 +513,34 @@ Give original responses suited to the current request.
   let geminiResponse;
 
   try {
+
     geminiResponse =
       await fetch(
         endpoint,
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json"
           },
-          body: JSON.stringify({
-            systemInstruction,
-            contents,
-            generationConfig: {
-              temperature: 0.85,
-              topP: 0.95,
-              maxOutputTokens: 8192
-            }
-          })
+
+          body:
+            JSON.stringify({
+              systemInstruction,
+              contents,
+
+              generationConfig: {
+                temperature: 0.85,
+                topP: 0.95,
+                maxOutputTokens: 8192
+              }
+            })
         }
       );
+
   } catch (error) {
+
     return json(
       {
         success: false,
@@ -1523,7 +552,12 @@ Give original responses suited to the current request.
     );
   }
 
+  // --------------------------------------------------
+  // GEMINI ERROR
+  // --------------------------------------------------
+
   if (!geminiResponse.ok) {
+
     const errorText =
       await geminiResponse.text();
 
@@ -1531,12 +565,14 @@ Give original responses suited to the current request.
       "Gemini API request failed.";
 
     try {
-      const parsed =
+
+      const errorJSON =
         JSON.parse(errorText);
 
       errorMessage =
-        parsed?.error?.message ||
+        errorJSON?.error?.message ||
         errorMessage;
+
     } catch {}
 
     return json(
@@ -1549,11 +585,17 @@ Give original responses suited to the current request.
     );
   }
 
+  // --------------------------------------------------
+  // STREAM
+  // --------------------------------------------------
+
   if (!geminiResponse.body) {
+
     return json(
       {
         success: false,
-        error: "Gemini returned an empty stream."
+        error:
+          "Gemini returned an empty response stream."
       },
       502
     );
@@ -1562,6 +604,9 @@ Give original responses suited to the current request.
   const encoder =
     new TextEncoder();
 
+  const decoder =
+    new TextDecoder();
+
   const reader =
     geminiResponse
       .body
@@ -1569,37 +614,54 @@ Give original responses suited to the current request.
 
   const stream =
     new ReadableStream({
+
       async start(controller) {
+
         try {
+
           while (true) {
+
             const {
               value,
               done
-            } = await reader.read();
+            } =
+              await reader.read();
 
             if (done) break;
 
             if (value) {
+
+              const chunk =
+                decoder.decode(
+                  value,
+                  {
+                    stream: true
+                  }
+                );
+
               controller.enqueue(
-                encoder.encode(
-                  new TextDecoder().decode(
-                    value
-                  )
-                )
+                encoder.encode(chunk)
               );
             }
           }
+
         } catch (error) {
+
+          const payload =
+            JSON.stringify({
+              error:
+                error?.message ||
+                "Streaming error."
+            });
+
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({
-                error:
-                  error?.message ||
-                  "Streaming error."
-              })}\n\n`
+              `data: ${payload}\n\n`
             )
           );
+
         } finally {
+
           try {
             reader.releaseLock();
           } catch {}
@@ -1613,12 +675,16 @@ Give original responses suited to the current request.
     stream,
     {
       status: 200,
+
       headers: {
         ...CORS,
+
         "Content-Type":
           "text/event-stream; charset=utf-8",
+
         "X-Accel-Buffering":
           "no",
+
         "Connection":
           "keep-alive"
       }
@@ -1626,30 +692,46 @@ Give original responses suited to the current request.
   );
 }
 
-// ============================================================
-// GEMINI IMAGE GENERATION
-// ============================================================
 
-async function generateImage(request, env) {
+// ======================================================
+// IMAGE GENERATION
+// ======================================================
+
+async function generateImage(
+  request,
+  env
+) {
+
   if (!env.GEMINI_API_KEY) {
+
     return json(
       {
         success: false,
-        error: "GEMINI_API_KEY is not configured."
+        error:
+          "GEMINI_API_KEY is not configured."
       },
       500
     );
   }
 
+  // --------------------------------------------------
+  // BODY
+  // --------------------------------------------------
+
   let body;
 
   try {
-    body = await request.json();
+
+    body =
+      await request.json();
+
   } catch {
+
     return json(
       {
         success: false,
-        error: "Invalid JSON request."
+        error:
+          "Invalid JSON request."
       },
       400
     );
@@ -1661,10 +743,12 @@ async function generateImage(request, env) {
     ).trim();
 
   if (!prompt) {
+
     return json(
       {
         success: false,
-        error: "Image prompt is empty."
+        error:
+          "Image prompt is empty."
       },
       400
     );
@@ -1674,14 +758,20 @@ async function generateImage(request, env) {
     prompt.length >
     MAX_IMAGE_PROMPT_CHARS
   ) {
+
     return json(
       {
         success: false,
-        error: "Image prompt is too long."
+        error:
+          "Image prompt is too long."
       },
       413
     );
   }
+
+  // --------------------------------------------------
+  // IMAGE API
+  // --------------------------------------------------
 
   const endpoint =
     "https://generativelanguage.googleapis.com/" +
@@ -1690,43 +780,56 @@ async function generateImage(request, env) {
   let response;
 
   try {
+
     response =
       await fetch(
         endpoint,
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
+
             "x-goog-api-key":
               env.GEMINI_API_KEY
           },
-          body: JSON.stringify({
-            model: IMAGE_MODEL,
-            input: [
-              {
-                type: "text",
-                text: prompt
+
+          body:
+            JSON.stringify({
+
+              model:
+                IMAGE_MODEL,
+
+              input: [
+                {
+                  type: "text",
+                  text: prompt
+                }
+              ],
+
+              response_format: {
+                type: "image",
+                mime_type: "image/png",
+
+                aspect_ratio:
+                  String(
+                    body?.aspectRatio ||
+                    "1:1"
+                  ),
+
+                image_size:
+                  String(
+                    body?.imageSize ||
+                    "1K"
+                  )
               }
-            ],
-            response_format: {
-              type: "image",
-              mime_type: "image/png",
-              aspect_ratio:
-                String(
-                  body?.aspectRatio ||
-                  "1:1"
-                ),
-              image_size:
-                String(
-                  body?.imageSize ||
-                  "1K"
-                )
-            }
-          })
+            })
         }
       );
+
   } catch (error) {
+
     return json(
       {
         success: false,
@@ -1738,7 +841,12 @@ async function generateImage(request, env) {
     );
   }
 
+  // --------------------------------------------------
+  // API ERROR
+  // --------------------------------------------------
+
   if (!response.ok) {
+
     const errorText =
       await response.text();
 
@@ -1746,13 +854,15 @@ async function generateImage(request, env) {
       "Image generation failed.";
 
     try {
-      const parsed =
+
+      const errorJSON =
         JSON.parse(errorText);
 
       errorMessage =
-        parsed?.error?.message ||
-        parsed?.message ||
+        errorJSON?.error?.message ||
+        errorJSON?.message ||
         errorMessage;
+
     } catch {}
 
     return json(
@@ -1764,19 +874,32 @@ async function generateImage(request, env) {
     );
   }
 
+  // --------------------------------------------------
+  // RESPONSE
+  // --------------------------------------------------
+
   let data;
 
   try {
-    data = await response.json();
+
+    data =
+      await response.json();
+
   } catch {
+
     return json(
       {
         success: false,
-        error: "Image API returned invalid JSON."
+        error:
+          "Image API returned invalid JSON."
       },
       502
     );
   }
+
+  // --------------------------------------------------
+  // FIND IMAGE
+  // --------------------------------------------------
 
   let imageData = null;
   let mimeType = "image/png";
@@ -1784,6 +907,7 @@ async function generateImage(request, env) {
   if (
     data?.output_image?.data
   ) {
+
     imageData =
       data.output_image.data;
 
@@ -1796,9 +920,11 @@ async function generateImage(request, env) {
     !imageData &&
     Array.isArray(data?.steps)
   ) {
+
     for (
       const step of data.steps
     ) {
+
       if (
         !Array.isArray(
           step?.content
@@ -1810,10 +936,12 @@ async function generateImage(request, env) {
       for (
         const item of step.content
       ) {
+
         if (
           item?.type === "image" &&
           item?.data
         ) {
+
           imageData =
             item.data;
 
@@ -1829,41 +957,69 @@ async function generateImage(request, env) {
     }
   }
 
+  // --------------------------------------------------
+  // NO IMAGE
+  // --------------------------------------------------
+
   if (!imageData) {
+
     return json(
       {
         success: false,
         error:
           "Gemini completed the request but returned no image.",
-        model: IMAGE_MODEL
+        model:
+          IMAGE_MODEL
       },
       502
     );
   }
 
+  // --------------------------------------------------
+  // DATA URL
+  // --------------------------------------------------
+
   const imageUrl =
     `data:${mimeType};base64,${imageData}`;
 
+  // --------------------------------------------------
+  // SUCCESS
+  // --------------------------------------------------
+
   return json({
+
     success: true,
-    service: "Nexora AI",
-    type: "image",
-    model: IMAGE_MODEL,
+
+    service:
+      "Nexora AI",
+
+    type:
+      "image",
+
+    model:
+      IMAGE_MODEL,
+
     prompt,
+
     mimeType,
+
     imageUrl,
-    image: imageUrl
+
+    image:
+      imageUrl
   });
 }
 
-// ============================================================
+
+// ======================================================
 // TEXT FILE
-// ============================================================
+// ======================================================
 
 function isTextFile(
   mimeType,
   fileName
 ) {
+
   const type =
     String(
       mimeType || ""
@@ -1887,9 +1043,7 @@ function isTextFile(
       "application/javascript"
     ]);
 
-  if (
-    textTypes.has(type)
-  ) {
+  if (textTypes.has(type)) {
     return true;
   }
 
@@ -1910,52 +1064,14 @@ function isTextFile(
   );
 }
 
-// ============================================================
-// BASE64
-// ============================================================
 
-function bytesToBase64(bytes) {
-  let binary = "";
+// ======================================================
+// BASE64 UTF-8
+// ======================================================
 
-  const chunk = 0x8000;
-
-  for (
-    let i = 0;
-    i < bytes.length;
-    i += chunk
-  ) {
-    binary += String.fromCharCode(
-      ...bytes.subarray(
-        i,
-        Math.min(
-          i + chunk,
-          bytes.length
-        )
-      )
-    );
-  }
-
-  return btoa(binary);
-}
-
-function bytesToBase64Url(bytes) {
-  return bytesToBase64(bytes)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
-function base64UrlToBytes(value) {
-  let base64 =
-    String(value)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-  while (
-    base64.length % 4
-  ) {
-    base64 += "=";
-  }
+function decodeBase64Utf8(
+  base64
+) {
 
   const binary =
     atob(base64);
@@ -1970,98 +1086,26 @@ function base64UrlToBytes(value) {
     i < binary.length;
     i++
   ) {
+
     bytes[i] =
       binary.charCodeAt(i);
   }
 
-  return bytes;
-}
-
-function bytesToHex(bytes) {
-  return Array.from(bytes)
-    .map(
-      b =>
-        b.toString(16)
-          .padStart(2, "0")
-    )
-    .join("");
-}
-
-// ============================================================
-// UTF-8 BASE64 DECODER
-// ============================================================
-
-function decodeBase64Utf8(base64) {
   return new TextDecoder(
     "utf-8"
-  ).decode(
-    base64UrlToBytes(
-      String(base64)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "")
-    )
-  );
+  ).decode(bytes);
 }
 
-// ============================================================
-// CONSTANT-TIME COMPARE
-// ============================================================
 
-function constantTimeEqual(a, b) {
-  if (
-    !(a instanceof Uint8Array) ||
-    !(b instanceof Uint8Array)
-  ) {
-    return false;
-  }
-
-  if (
-    a.length !== b.length
-  ) {
-    return false;
-  }
-
-  let result = 0;
-
-  for (
-    let i = 0;
-    i < a.length;
-    i++
-  ) {
-    result |=
-      a[i] ^ b[i];
-  }
-
-  return result === 0;
-}
-
-// ============================================================
-// EMAIL
-// ============================================================
-
-function normalizeEmail(email) {
-  return String(
-    email || ""
-  )
-    .trim()
-    .toLowerCase();
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    email
-  );
-}
-
-// ============================================================
+// ======================================================
 // JSON RESPONSE
-// ============================================================
+// ======================================================
 
 function json(
   data,
   status = 200
 ) {
+
   return new Response(
     JSON.stringify(
       data,
@@ -2070,8 +1114,10 @@ function json(
     ),
     {
       status,
+
       headers: {
         ...CORS,
+
         "Content-Type":
           "application/json; charset=UTF-8"
       }
